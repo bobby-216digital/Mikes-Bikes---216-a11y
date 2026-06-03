@@ -1,0 +1,186 @@
+{% comment %}
+Growth Spurt Guarantee
+{% endcomment %}
+
+{% unless product.title contains "Carbon" or product.title contains "26" or product.title contains "Blem" or product.type contains 'KIDS 26' %}
+{% if product.type contains "BIKES/KIDS" %}
+<div style="margin-bottom: 10px; line-height: normal; margin: 10px 12% 10px;">
+	<a href="https://mikesbikes.com/pages/growth-spurt-guarantee" target="_blank" style="color: #6fa058; font-size: 14px; font-weight: 800;">
+		<img fetchpriority="low" src="https://cdn.shopify.com/s/files/1/0016/3856/3907/files/growth_spurt_logo.png?v=1585167047" width="100" style="margin: auto; display: block;">              
+			Purchase a kids bike at Mike's Bikes, trade it in when it's time to upgrade, and get 50% of the old bike purchase towards a new bike!
+	</a>
+</div>
+{% endif %}
+{% endunless %}
+
+{% comment %}
+24mo Financing Email Inquiry
+
+{% if product.tags contains "24mo" %}
+<span style="color: #404040; font-size: 14px; font-weight: regular;">${{ product.price | divided_by: 2400 | round }}/mo suggested payments with 24-month special financing</span>. <span style="text-decoration: underline;"><span style="color: #d72121; font-size: 14px; font-weight: 800;"><a href="mailto:info@mikesbikes.com?subject=24%20Month Financing Inquiry for {{ product.vendor }} {{product.title }}&amp;body=I am writing to inquire about the 24-month financing special for the {{ product.vendor }} {{product.title }}. Could you please provide me with more details about this offer?" style="color: #d72121; font-size: 14px; font-weight: 800; text-decoration: underline;">Learn How</a></span></span>
+<br>
+{% endif %}
+ {% endcomment %}
+
+{% comment %}
+Maintenance Plans Available
+
+{% unless product.tags contains '2023DBIKE' %}
+{% if product.type contains "BIKES AND FRAMES/BIKES" %}
+<div style="text-align: center;">
+	<a href="https://mikesbikes.com/pages/5-year-maintenance-plan" title="Maintenance Plans Available">
+       <img src="https://cdn.shopify.com/s/files/1/0016/3856/3907/files/maintenance_plan_logoV2.png?v=1707849779" alt="" style="margin: 10px 10px 10px 10px; float: none;">
+	</a>
+ </div>
+{% endif %}
+{% endunless %}  
+{% endcomment %}
+
+{% comment %}
+Mike's Bikes Tour Giveaway
+
+{% if product.vendor == "Cervelo" and product.type contains "BIKES AND FRAMES" %}
+<div style="text-align: center;">
+  <a href="https://mikesbikes.com/pages/mikes-bikes-and-cervelo-tour-de-france-giveaway" title="Mike's Bikes Tour Giveaway">
+    <img src="https://cdn.shopify.com/s/files/1/0016/3856/3907/files/tour_giveaway_small_f985b513-c151-4e59-b1d9-44f6c8c37df5.png?v=1748910547" alt="Tour Giveaway" style="margin: 0 10px; display: inline-block;">
+  </a>
+</div>
+{% endif %}
+{% endcomment %}
+
+{% comment %}
+Demo Bikes Available
+
+{% if product.tags contains "2023DBIKE" %}
+<div style="text-align: center;">
+	<a href="https://mikesbikes.com/pages/demo-bikes" title="Demo Bikes Available">
+       <img src="https://cdn.shopify.com/s/files/1/0016/3856/3907/files/demo_icon1_small_eb2a1566-b1f8-4ab9-8104-48fc01208970.png?v=1699052394" alt="" style="margin: 0px 10px 0px 10px; float: none;">
+	</a>
+</div>
+{% endif %}
+{% endcomment %}
+
+{% comment %}
+Add to Cart for Sale Price Blurb
+{% endcomment %}
+          
+{% if product.tags contains 'addtocart' %}
+  <div style="color: red; font-size: 14px; font-weight: 800;">ADD TO CART FOR SALE PRICE</div>
+{% endif %}
+
+{% comment %}
+Mega Sale - "Click for Price" Banner
+
+{% unless product.vendor == 'Thule' %}
+{% if product.tags contains "mega5" %}
+<a href="mailto:info@mikesbikes.com?subject=Interested in Mega Sale Pricing for {{ product.vendor }} {{ product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sale price for the {{ product.vendor }} {{ product.title }}?" style="text-decoration: none;">
+  <div style="text-align: center; background-color: #143762; color: #bbd866; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+    Mega Sale Offer&nbsp;|&nbsp;Click to Get Price
+  </div>
+</a>
+{% endif %}
+
+{% if product.tags contains "mega10" %}
+<a href="mailto:info@mikesbikes.com?subject=Mega Sale Price Request for {{ product.vendor }} {{ product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sale price for the {{ product.vendor }} {{ product.title }}?" style="text-decoration: none;">
+  <div style="text-align: center; background-color: #143762; color: #bbd866; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+    Mega Sale Offer&nbsp;|&nbsp;Click to Get Price
+  </div>
+</a>
+{% endif %}
+
+{% if product.tags contains "mega15" %}
+<a href="mailto:info@mikesbikes.com?subject=Requesting Mega Sale Price for {{ product.vendor }} {{ product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sale price for the {{ product.vendor }} {{ product.title }}?" style="text-decoration: none;">
+  <div style="text-align: center; background-color: #143762; color: #bbd866; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+    Mega Sale Offer&nbsp;|&nbsp;Click to Get Price
+  </div>
+</a>
+{% endif %}
+
+{% if product.tags contains "mega20" %}
+<a href="mailto:info@mikesbikes.com?subject=Mega Sale Price Inquiry for {{ product.vendor }} {{ product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sale price for the {{ product.vendor }} {{ product.title }}?" style="text-decoration: none;">
+  <div style="text-align: center; background-color: #143762; color: #bbd866; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+    Mega Sale Offer&nbsp;|&nbsp;Click to Get Price
+  </div>
+</a>
+{% endif %}
+
+{% if product.tags contains "mega25" %}
+<a href="mailto:info@mikesbikes.com?subject=Inquiring Mega Sale Price for {{ product.vendor }} {{ product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sale price for the {{ product.vendor }} {{ product.title }}?" style="text-decoration: none;">
+  <div style="text-align: center; background-color: #143762; color: #bbd866; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+    Mega Sale Offer&nbsp;|&nbsp;Click to Get Price
+  </div>
+</a>
+{% endif %}
+
+{% if product.tags contains "mega30" %}
+<a href="mailto:info@mikesbikes.com?subject=Inquiring Mega Sale Discount Request for {{ product.vendor }} {{ product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sale price for the {{ product.vendor }} {{ product.title }}?" style="text-decoration: none;">
+  <div style="text-align: center; background-color: #143762; color: #bbd866; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+    Mega Sale Offer&nbsp;|&nbsp;Click to Get Price
+  </div>
+</a>
+{% endif %}
+{% endunless %}
+{% endcomment %}
+
+{% comment %} Free Shipping and Assembly Promotion 
+
+{% unless product.tags contains 'powermorepromo' %}
+{% if product.type contains "BIKES AND FRAMES" %}
+  <a href="https://mikesbikes.com/pages/offer-terms-and-conditions" style="text-decoration: none;">
+  <div style="text-align: center; background: linear-gradient(135deg, #006eba 0%, #008bd7 45%, #7bcee4 100%); color: white; padding: 8px 16px; font-weight: 800; font-size: 14px; display: inline-block; border-radius: 4px;">      
+    FREE SHIPPING & ASSEMBLY | Offer Ends 5/31
+    </div>
+  </a>
+{% endif %}
+{% endunless %}
+{% endcomment %}
+
+{% comment %} Bosch PowerMore Range Extender Promo Blurb {% endcomment %}
+
+{% if product.tags contains "powermorepromo" %}
+  <a href="https://mikesbikes.com/pages/offer-terms-and-conditions" style="text-decoration: none;">
+  <div style="text-align: center; background-color: #009FDF; color: white; padding: 8px 16px; font-weight: 800; font-size: 14px; display: inline-block; border-radius: 4px;">      
+    FREE BOSCH RANGE EXTENDER | Learn More
+  </div>
+  </a>
+{% endif %}
+
+{% comment %} General Sale and Clearance Promo
+
+{% if product.tags contains "Sale" %}
+  <a href="https://mikesbikes.com/pages/offer-terms-and-conditions" style="text-decoration: none;">
+  <div style="text-align: center; background-color: #be3027; color: white; padding: 8px 16px; font-weight: 800; font-size: 14px; display: inline-block; border-radius: 4px;">      
+    Memorial Day Sale | Offer Ends 5/25
+    </div>
+  </a>
+{% endif %}
+ {% endcomment %}
+
+{% comment %}
+This code displays limited-time promo banner
+
+{% if product.tags contains 'Extra500off' %}
+  <a href="https://mikesbikes.com/pages/offer-terms-and-conditions" style="text-decoration: none;">
+    <div style="text-align: center; background-color: #022244; color: #f7ff3c; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+      EXTRA $500 OFF | AUTO DISCOUNT IN CART
+    </div>
+  </a>
+{% endif %}
+{% endcomment %}
+
+{% comment %}
+Rebate Deal
+
+{% for tag in product.tags %}
+	{% if tag contains 'rebate-' %}
+		{% assign rebate = tag | remove: 'rebate-' | times: 100 %}            		
+			<div style="color: red; font-size: 16px; font-weight: 800;">
+				Final Price after rebate {{ current_variant.price | minus: rebate | floor | money }} (save {{ rebate | times: 2 | money }})
+			</div>
+			<div style="color: gray; font-size: 13px; margin-bottom: 10px;">
+				Visit <a style="color: gray;" target="_blank" href="https://www.specializedrebates.com">specializedrebates.com</a> to claim your {{ rebate | money }} rebate
+			</div>	                	     
+	{% endif %}
+{% endfor %}
+
+{% endcomment %}

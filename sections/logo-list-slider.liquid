@@ -1,0 +1,228 @@
+{%- style -%}
+.logo-bar--{{ section.id }} {
+  opacity: {{ section.settings.logo_opacity | divided_by: 100.0 }};
+}
+
+/* Mobile slider */
+@media screen and (max-width: 768px) {
+  .logo-slider-wrapper {
+    position: relative;
+  }
+
+  .logo-bar--mobile-scroll {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding: 1rem;
+    scroll-padding-left: 1rem;
+    scroll-behavior: smooth;
+  }
+
+  .logo-bar--mobile-scroll .logo-bar__item {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    min-width: 140px;
+    text-align: center;
+  }
+
+  .logo-bar--mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .logo-slider-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 1rem;
+  }
+
+  .slider-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #bbb;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+  }
+
+  .slider-dot.active {
+    background-color: #333;
+  }
+
+  .slider-dot:focus,
+  .slider-dot:hover {
+    background-color: #555;
+  }
+
+  .is-hidden-on-mobile {
+    display: none !important;
+  }
+}
+
+/* Desktop grid */
+@media screen and (min-width: 769px) {
+  .logo-bar--desktop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 2rem;
+    padding: 2rem 0;
+  }
+
+  .is-hidden-on-desktop {
+    display: none !important;
+  }
+}
+{%- endstyle -%}
+
+<div class="page-width logo-bar--{{ section.id }}">
+  {%- if section.settings.title != blank -%}
+    <div class="section-header">
+      <h2 class="section-header__title">{{ section.settings.title | escape }}</h2>
+    </div>
+  {%- endif -%}
+
+  {%- if section.blocks.size > 0 -%}
+
+    <!-- ✅ Mobile: slider + working links + scroll-tracking dots -->
+    <div class="logo-slider-wrapper is-hidden-on-desktop" id="logo-slider-wrapper-{{ section.id }}">
+      <div class="logo-bar--mobile-scroll" id="logo-scroll-{{ section.id }}">
+        {%- for block in section.blocks -%}
+          <div class="logo-bar__item" id="logo-{{ forloop.index }}" {{ block.shopify_attributes }}>
+            {%- if block.settings.link != blank -%}
+              <a href="{{ block.settings.link }}" class="logo-bar__link">
+            {%- endif -%}
+            {%- if block.settings.image != blank -%}
+              {%- render 'image-element',
+                img: block.settings.image,
+                widths: '180, 360, 540, 720',
+                classes: 'logo-bar__image',
+                sizeVariable: '160px',
+                fallback: '110px',
+              -%}
+            {%- else -%}
+              {{ 'logo' | placeholder_svg_tag: 'placeholder-svg' }}
+            {%- endif -%}
+            {%- if block.settings.link != blank -%}
+              </a>
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      </div>
+
+      <!-- Dot navigation -->
+      <div class="logo-slider-dots" id="slider-dots-{{ section.id }}">
+        {%- for block in section.blocks -%}
+          <a href="#logo-{{ forloop.index }}" class="slider-dot" data-index="{{ forloop.index0 }}" aria-label="Go to logo {{ forloop.index }}"></a>
+        {%- endfor -%}
+      </div>
+    </div>
+
+    <!-- ✅ Desktop: static responsive grid -->
+    <div class="logo-bar--desktop-grid is-hidden-on-mobile">
+      {%- for block in section.blocks -%}
+        <div class="logo-bar__item" {{ block.shopify_attributes }}>
+          {%- if block.settings.link != blank -%}
+            <a href="{{ block.settings.link }}" class="logo-bar__link">
+          {%- endif -%}
+          {%- if block.settings.image != blank -%}
+            {%- render 'image-element',
+              img: block.settings.image,
+              widths: '180, 360, 540, 720',
+              classes: 'logo-bar__image',
+              sizeVariable: '160px',
+              fallback: '110px',
+            -%}
+          {%- else -%}
+            {{ 'logo' | placeholder_svg_tag: 'placeholder-svg' }}
+          {%- endif -%}
+          {%- if block.settings.link != blank -%}
+            </a>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+    </div>
+
+  {%- endif -%}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const sectionId = '{{ section.id }}';
+    const slides = document.querySelectorAll(`#logo-slider-wrapper-${sectionId} .logo-bar__item`);
+    const dots = document.querySelectorAll(`#slider-dots-${sectionId} .slider-dot`);
+
+    if ('IntersectionObserver' in window && slides.length && dots.length) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const index = [...slides].indexOf(entry.target);
+            dots.forEach(dot => dot.classList.remove('active'));
+            if (dots[index]) {
+              dots[index].classList.add('active');
+            }
+          }
+        });
+      }, {
+        root: document.querySelector(`#logo-scroll-${sectionId}`),
+        threshold: 0.6
+      });
+
+      slides.forEach(slide => observer.observe(slide));
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Logo List Slider",
+  "class": "index-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title"
+    },
+    {
+      "type": "range",
+      "id": "logo_opacity",
+      "label": "Logo opacity",
+      "default": 76,
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "%"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "logo_image",
+      "name": "Logo",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Logo List Slider",
+      "blocks": [
+        { "type": "logo_image" },
+        { "type": "logo_image" },
+        { "type": "logo_image" },
+        { "type": "logo_image" }
+      ]
+    }
+  ]
+}
+{% endschema %}

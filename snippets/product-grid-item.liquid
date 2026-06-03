@@ -1,0 +1,511 @@
+{% comment %}
+Arguments
+- product: product object
+- [per_row]: number of items per row
+- [quick_shop_enable]: boolean
+- [collection]: collection object
+{% endcomment %}
+
+{%- liquid
+  unless per_row
+    assign per_row = 4
+  endunless
+
+  capture gridView
+    render 'products_per_row', products_per_row: per_row, style: 'fractions'
+  endcapture
+
+  # These assignments have no effect if a sizes parameter is passed in
+  assign sizeVariable = gridView
+  if fallback != blank
+    assign fallback = fallback
+  else
+    assign fallback = 'variable'
+  endif
+
+  assign on_sale = false
+  if product.compare_at_price > product.price
+    assign on_sale = true
+  endif
+
+  assign product_tags = product.tags | join: ','
+  assign has_custom_label = false
+  if product.metafields.theme.label and product.metafields.theme.label != blank
+    assign has_custom_label = true
+    assign custom_label = product.metafields.theme.label.value
+  elsif product_tags contains '_label_'
+    for tag in product.tags
+      if tag contains '_label_'
+        assign tag_starts_with = tag | slice: 0
+        if tag_starts_with == '_'
+          assign has_custom_label = true
+          assign custom_label = tag | replace: '_label_', ''
+        endif
+      endif
+    endfor
+  endif
+-%}
+
+<div class="grid__item grid-product {{ gridView }} {% if quick_shop_enable %} grid-product__has-quick-shop{% endif %}" data-aos="row-of-{{ per_row }}" data-product-handle="{{ product.handle }}" data-product-id="{{ product.id }}">
+  <div class="grid-product__content">
+    {%- if has_custom_label -%}
+      <div class="grid-product__tag grid-product__tag--custom">
+        {{ custom_label }}
+      </div>
+    {%- else -%}
+      {%- unless product.available -%}
+        <div class="grid-product__tag grid-product__tag--sold-out">
+          {{ 'products.product.sold_out' | t }}
+        </div>
+      {%- endunless -%}
+      {%- if on_sale and product.available -%}
+        <div class="grid-product__tag grid-product__tag--sale">
+          {{ 'products.general.sale' | t }}
+        </div>
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- liquid
+      assign imageRatio = settings.product_grid_image_size
+      assign fixed_aspect_ratio = false
+      unless imageRatio == 'natural'
+        assign fixed_aspect_ratio = true
+      endunless
+
+      if image_style == 'circle'
+        assign fixed_aspect_ratio = true
+        assign imageRatio = 'square'
+      endif
+
+      assign preview_image = product.featured_media.preview_image
+    -%}
+
+    <div class="grid__item-image-wrapper">
+      <div class="grid-product__image-mask">
+        {%- if fixed_aspect_ratio -%}
+          <div
+            class="grid__image-ratio grid__image-ratio--{% if image_style == 'circle' %}square{% else %}{{ settings.product_grid_image_size }}{% endif %}">
+            {%- capture image_classes -%}
+              {% unless settings.product_grid_image_fill %} grid__image-contain{% endunless %} image-style--{{ image_style }}
+            {%- endcapture -%}
+            {%- if preview_image != blank -%}
+              {%- render 'image-element',
+                img: preview_image,
+                classes: image_classes,
+                sizes: sizes,
+                isnoanimation:true,
+                sizeVariable: sizeVariable,
+                fallback: fallback,
+                widths: '360, 540, 720, 900, 1080',
+              -%}
+            {%- else -%}
+              {%- capture placeholder -%}product-{% cycle 1, 2, 3, 4, 5, 6 %}{%- endcapture -%}
+              <div class="product-image--placeholder">{{ placeholder | placeholder_svg_tag: 'placeholder-svg' }}</div>
+            {%- endif -%}
+          </div>
+        {%- else -%}
+          <div class="image-wrap"
+            {% if preview_image != blank %}
+              style="height: 0; padding-bottom: {{ 100 | divided_by: preview_image.aspect_ratio }}%;"
+            {% endif %}
+          >
+            {%- if preview_image != blank -%}
+              {%- capture image_classes -%}
+                grid-product__image image-style--{{ image_style }}
+              {%- endcapture -%}
+              {%- render 'image-element',
+                img: preview_image,
+                classes: image_classes,
+                isnoanimation:true,
+                sizes: sizes,
+                sizeVariable: sizeVariable,
+                fallback: fallback,
+                widths: '360, 540, 720, 900, 1080',
+              -%}
+            {%- else -%}
+              {%- capture placeholder -%}product-{% cycle 1, 2, 3, 4, 5, 6 %}{%- endcapture -%}
+              <div class="product-image--placeholder">{{ placeholder | placeholder_svg_tag: 'placeholder-svg' }}</div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+        {%- if settings.product_hover_image and product.media.size > 1 -%}
+          {%- for media in product.media offset: 1 limit: 1 -%}
+            {%- assign second_image = media.preview_image -%}
+          {%- endfor -%}
+          <div class="grid-product__secondary-image small--hide">
+            {%- capture image_classes -%}
+              image-style--{{ image_style }}
+            {%- endcapture -%}
+            {%- render 'image-element',
+              img: second_image,
+              classes: image_classes,
+              sizes: sizes,
+              isnoanimation:true,
+              sizeVariable: sizeVariable,
+              fallback: fallback,
+              widths: '360, 540, 720, 1000',
+            -%}
+          </div>
+        {%- endif -%}
+
+        {%- if settings.enable_swatches -%}
+          {%- assign swatch_trigger = 'products.general.color_swatch_trigger' | t | downcase -%}
+          {%- for option in product.options_with_values -%}
+            {%- liquid
+              assign option_name = option.name | downcase
+              assign is_color = false
+              if option_name contains swatch_trigger
+                assign is_color = true
+              elsif swatch_trigger == 'color' and option_name contains 'colour'
+                assign is_color = true
+              endif
+            -%}
+            {%- if is_color -%}
+              {%- assign option_index = forloop.index0 -%}
+              {%- assign values = '' -%}
+              {%- for variant in product.variants -%}
+                {%- assign value = variant.options[option_index] %}
+                {%- unless values contains value -%}
+                  {%- liquid
+                    assign values = values | join: ',' | append: ',' | append: value | split: ','
+                  -%}
+
+                  {%- if variant.image -%}
+                    <div
+                      class="grid-product__color-image grid-product__color-image--{{ variant.id }} small--hide">
+                    </div>
+                  {%- endif -%}
+                {%- endunless -%}
+              {%- endfor -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+
+        {%- if quick_shop_enable and type == blank -%}
+          <button class="quick-product__btn quick-product__btn--not-ready js-modal-open-quick-modal-{{ product.id }} small--hide">
+            {{ settings.quick_shop_text }}
+          </button>
+        {%- endif -%}
+      </div>
+
+      <a href="{{ product.url | within: collection }}" class="grid-product__link">
+        <div class="grid-product__meta">
+          <div class="grid-product__title grid-product__title--{{ settings.type_product_style }}">{{ product.title }}</div>
+          {%- if settings.vendor_enable -%}
+            <div class="grid-product__vendor">{{ product.vendor }}</div>
+          {%- endif -%}
+          <div class="grid-product__price">
+
+          {%- assign lowest_available_price = product.price_max -%}
+          {%- assign highest_available_price = 0 -%}
+          {%- assign lowest_available_compare_at_price = product.compare_at_price_max -%}
+          {%- assign highest_available_compare_at_price = 0 -%}
+          	{%- for variant in product.variants -%}
+          		{%- if variant.available and variant.price < lowest_available_price -%}
+          			{% assign lowest_available_price = variant.price %}
+          		{%- endif -%}
+          		{%- if variant.available and variant.price > highest_available_price -%}
+          			{% assign highest_available_price = variant.price %}
+          		{%- endif -%}
+                {%- if variant.available and variant.compare_at_price < lowest_available_compare_at_price -%}
+          			{% assign lowest_available_compare_at_price = variant.compare_at_price %}
+          		{%- endif -%}
+          		{%- if variant.available and variant.compare_at_price > highest_available_compare_at_price -%}
+          			{% assign highest_available_compare_at_price = variant.compare_at_price %}
+          		{%- endif -%}
+          	{%- endfor -%}
+          {%- assign lowest_available_price_money = lowest_available_price | money -%}
+
+          {%- if lowest_available_price == lowest_available_compare_at_price -%}
+          {%- else -%}          
+            {%- if on_sale -%}
+              <span class="visually-hidden">{{ 'products.general.regular_price' | t }}</span>
+              <span class="grid-product__price--original">{{ lowest_available_compare_at_price | money }}</span>
+              <span class="visually-hidden">{{ 'products.general.sale_price' | t }}</span>
+            {%- endif -%}
+          {%- endif -%}
+            
+
+          {%- if product.price_varies -%}
+            	{%- if lowest_available_price == highest_available_price -%}
+          		{{ lowest_available_price  | money }}
+         	 {%- else -%}
+          		{{ 'products.general.from_text_html' | t: price: lowest_available_price_money }}
+         		{%- endif -%}
+            {%- else -%}
+              {{ product.price | money }}
+          {%- endif -%}
+            {%- if on_sale -%}
+              {%- if settings.product_save_amount -%}
+                {%- if settings.product_save_type == 'dollar' -%}
+                  {%- capture saved_amount -%}{{ lowest_available_compare_at_price | minus: product.price | money }}{%- endcapture -%}
+                {%- else -%}
+                  {%- capture saved_amount -%}{{ lowest_available_compare_at_price | minus: lowest_available_price | times: 100.0 | divided_by: lowest_available_compare_at_price | round }}%{%- endcapture -%}
+              {%- endif -%}
+
+              {%- unless saved_amount == "0%" -%}
+              <span class="grid-product__price--savings">
+                {{ 'products.general.save_html' | t: saved_amount: saved_amount }}
+              </span>
+          		{%- endunless -%}
+            {%- endif -%}
+          {%- endif -%}
+
+            {%- assign product_variant = product.selected_or_first_available_variant -%}
+            {%- if product_variant.unit_price_measurement -%}
+              <div class="product__unit-price">
+                {%- capture unit_price_base_unit -%}
+                  {%- if product_variant.unit_price_measurement -%}
+                    {%- if product_variant.unit_price_measurement.reference_value != 1 -%}
+                      {{ product_variant.unit_price_measurement.reference_value }}
+                    {%- endif -%}
+                    {{ product_variant.unit_price_measurement.reference_unit }}
+                  {%- endif -%}
+                {%- endcapture -%}
+
+                {{ product_variant.unit_price | money }}/{{ unit_price_base_unit }}
+              </div>
+            {%- endif -%}
+          </div>
+
+          {%- if settings.enable_swatches and type == 'horizontal' -%}
+            {%- liquid
+              assign swatch_trigger = 'products.general.color_swatch_trigger' | t | downcase
+              assign swatch_file_extension = 'png'
+              assign color_count = 0
+            -%}
+
+            {%- for option in product.options_with_values -%}
+              {%- liquid
+                assign option_name = option.name | downcase
+                assign is_color = false
+                if option_name contains swatch_trigger
+                  assign is_color = true
+                elsif swatch_trigger == 'color' and option_name contains 'colour'
+                  assign is_color = true
+                endif
+              -%}
+              {%- if is_color -%}
+                {%- assign option_index = forloop.index0 -%}
+                {%- assign values = '' -%}
+                <div class="grid-product__colors grid-product__colors--{{ product.id }}">
+                  {%- for variant in product.variants -%}
+                    {%- assign value = variant.options[option_index] %}
+                    {%- unless values contains value -%}
+                      {%- liquid
+                        assign values = values | join: ',' | append: ',' | append: value | split: ','
+
+                        assign color_file_name = value | handle | append: '.' | append: swatch_file_extension
+                        assign color_image = color_file_name | file_img_url: '50x50' | prepend: 'https:' | split: '?' | first
+                        assign color_swatch_fallback = value | split: ' ' | last | handle
+                        assign color_count = color_count | plus: 1
+                      -%}
+
+                      <span
+                        class="color-swatch color-swatch--small color-swatch--{{ value | handle }}{% if variant.image %} color-swatch--with-image{% endif %}"
+                        {% if variant.image %}
+                          data-variant-id="{{ variant.id }}"
+                          data-variant-image="{{ variant.image | img_url: '400x' }}"
+                        {% endif %}
+                        aria-label="{{ product.title }} - {{ value }}"
+                        style="background-color: {{ color_swatch_fallback }};{% if images[color_file_name] != blank %}  background-image: url({{ color_image }});{% endif %}">
+                        <span class="visually-hidden">{{ value }}</span>
+                      </span>
+                    {%- endunless -%}
+                  {%- endfor -%}
+                </div>
+                {%- if color_count < 2 -%}
+                  {%- style -%}
+                    .grid-product__colors--{{ product.id }} {
+                      display: none;
+                    }
+                  {%- endstyle -%}
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
+
+{% if product.tags contains 'buy2' %}
+	<div style="color: red; font-size: 14px; font-weight: 800;">BUY 2 GET 1 FREE</div>
+{% endif %}
+
+{% if product.tags contains 'buy1' %}
+	<div style="color: red; font-size: 14px; font-weight: 800;">BUY 1 GET 1 FREE</div>
+{% endif %}          
+
+{% comment %}
+Limited-Time Promo Upgrade Banner 
+{% endcomment %}        
+
+{% if template == 'collection' and collection.handle == 'reserve-carbon-wheel-upgrade' %}
+  {% if product.tags contains 'reserveupgrade' %}
+    <br>
+      <div style="background-color: #00354F; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; display: inline-block; letter-spacing: 0.05em;">UPGRADE & SAVE 20%</div>
+  {% endif %}
+{% endif %} 
+
+{% comment %}
+Mega Sale Add to Cart for Price        
+          
+{% if product.tags contains 'addtocart' %}
+	<div style="text-decoration: underline; color: red; font-size: 14px; font-weight: 800;">ADD TO CART FOR MEGA PRICE</div>
+{% endif %} 
+{% endcomment %}  
+
+{% comment %}
+Mega Sale Email for Price             
+          
+{% if product.tags contains "mega5" %}
+<div style="text-decoration: underline; color: red; font-size: 14px; font-weight: 800;">
+  <a href="mailto:info@mikesbikes.com?subject=Interested in Mega Sale Pricing for {{ product.vendor }} {{product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sales price for the {{ product.vendor }} {{product.title }}?" style="color: red;">EMAIL FOR PRICE</a>
+</div>
+{% endif %} 
+             
+{% if product.tags contains "mega10" %}
+<div style="text-decoration: underline; color: red; font-size: 14px; font-weight: 800;">
+  <a href="mailto:info@mikesbikes.com?subject=Mega Sale Price Request for {{ product.vendor }} {{product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sales price for the {{ product.vendor }} {{product.title }}?" style="color: red;">EMAIL FOR PRICE</a>
+</div>
+{% endif %}
+         
+{% if product.tags contains "mega15" %}
+<div style="text-decoration: underline; color: red; font-size: 14px; font-weight: 800;">
+  <a href="mailto:info@mikesbikes.com?subject=Requesting Mega Sale Price for {{ product.vendor }} {{product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sales price for the {{ product.vendor }} {{product.title }}?" style="color: red;">EMAIL FOR PRICE</a>
+</div>
+{% endif %} 
+
+{% if product.tags contains "mega20" %}
+<div style="text-decoration: underline; color: red; font-size: 14px; font-weight: 800;">
+  <a href="mailto:info@mikesbikes.com?subject=Mega Sale Price Inquiry for {{ product.vendor }} {{product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sales price for the {{ product.vendor }} {{product.title }}?" style="color: red;">EMAIL FOR PRICE</a>
+</div>
+{% endif %}
+
+{% if product.tags contains "mega25" %}
+<div style="text-decoration: underline; color: red; font-size: 14px; font-weight: 800;">
+  <a href="mailto:info@mikesbikes.com?subject=Inquiring Mega Sale Price for {{ product.vendor }} {{product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sales price for the {{ product.vendor }} {{product.title }}?" style="color: red;">EMAIL FOR PRICE</a>
+</div>
+{% endif %}
+
+{% if product.tags contains "mega30" %}
+<div style="text-decoration: underline; color: red; font-size: 14px; font-weight: 800;">
+  <a href="mailto:info@mikesbikes.com?subject=Inquiring Mega Sale Discount Request for {{ product.vendor }} {{product.title }}&body=Spotted your sale at www.mikesbikes.com. Can you let me know the sales price for the {{ product.vendor }} {{product.title }}?" style="color: red;">EMAIL FOR PRICE</a>
+</div>
+{% endif %}
+{% endcomment %}            
+
+{% comment %}
+24mo Financing Blurb
+
+{% unless product.title contains "demo" %}          
+{% if product.vendor == 'Cervelo' and product.price > 349900%}
+<div style="color: #767676; font-size: 14px; font-weight: regular; text-decoration: underline;">
+  <a href="https://mikesbikes.com/pages/bike-financing-with-synchrony" style="color: #767676">24-Month Financing Available</a>
+</div>
+{% endif %}
+{% endunless %} 
+{% endcomment %}        
+
+{% comment %}
+24mo Financing Email Inquiry
+          
+{% if product.tags contains "24mosynchrony" %}
+<div style="color: #d72121; font-size: 14px; font-weight: 800;">
+  <a href="mailto:info@mikesbikes.com?subject=24%20Month Financing Inquiry for {{ product.vendor }} {{product.title }}&amp;body=I am writing to inquire about the 24-month financing special for the {{ product.vendor }} {{product.title }}. Could you please provide me with more details about this offer?" style="color: #d72121">24 MONTH FINANCING OFFER</a>
+</div>
+{% endif %}   
+ {% endcomment %}
+
+{% comment %}
+This code displays limited-time promo banner 
+{% endcomment %} 
+          
+{% if product.tags contains 'Extra500off' %}
+  <div style="color: #022244; font-size: 14px; font-weight: 800;">EXTRA $500 OFF →</div>
+{% endif %} 
+          
+{% comment %}
+Growth Spurt Message
+{% endcomment %}
+
+{% unless product.title contains "Carbon" or product.title contains "26" or product.title contains "Blem" or product.type contains 'KIDS 26' %}
+{% if product.type contains "BIKES/KIDS" %}
+<div style="color: #6fa058; font-size: 14px; font-weight: 800;">
+	Growth Spurt Guarantee&trade;
+</div>
+{% endif %}
+{% endunless %}
+
+{% comment %} This displays the compare at tool for 'BIKE AND FRAMES'
+
+          {% if product.type contains 'BIKES AND FRAMES' %}
+			{% render 'add-to-compare' with 'loop' as add-to-compare, product: product %}
+		  {% endif %}
+
+{% endcomment %}
+          
+        </div>
+      </a>
+    </div>
+  </div>
+  {%- if settings.enable_swatches and type == blank -%}
+    {%- liquid
+      assign swatch_trigger = 'products.general.color_swatch_trigger' | t | downcase
+      assign swatch_file_extension = 'png'
+      assign color_count = 0
+    -%}
+
+    {%- for option in product.options_with_values -%}
+      {%- liquid
+        assign option_name = option.name | downcase
+        assign is_color = false
+        if option_name contains swatch_trigger
+          assign is_color = true
+        elsif swatch_trigger == 'color' and option_name contains 'colour'
+          assign is_color = true
+        endif
+      -%}
+      {%- if is_color -%}
+        {%- assign option_index = forloop.index0 -%}
+        {%- assign values = '' -%}
+        <div class="grid-product__colors grid-product__colors--{{ product.id }}">
+          {%- for variant in product.variants -%}
+            {%- assign value = variant.options[option_index] %}
+            {%- unless values contains value -%}
+              {%- liquid
+                assign values = values | join: ',' | append: ',' | append: value | split: ','
+
+                assign color_file_name = value | handle | append: '.' | append: swatch_file_extension
+                assign color_image = color_file_name | file_img_url: '50x50' | prepend: 'https:' | split: '?' | first
+                assign color_swatch_fallback = value | split: ' ' | last | handle
+                assign color_count = color_count | plus: 1
+              -%}
+
+              <a
+                href="{{ variant.url | within: collection }}"
+                class="color-swatch color-swatch--small color-swatch--{{ value | handle }}{% if variant.image %} color-swatch--with-image{% endif %}"
+                {% if variant.image %}
+                  data-variant-id="{{ variant.id }}"
+                  data-variant-image="{{ variant.image | img_url: '400x' }}"
+                {% endif %}
+                aria-label="{{ product.title }} - {{ value }}"
+                style="background-color: {{ color_swatch_fallback }};{% if images[color_file_name] != blank %}  background-image: url({{ color_image }});{% endif %}">
+                <span class="visually-hidden">{{ value }}</span>
+              </a>
+            {%- endunless -%}
+          {%- endfor -%}
+        </div>
+        {%- if color_count < 2 -%}
+          {%- style -%}
+            .grid-product__colors--{{ product.id }} {
+              display: none;
+            }
+          {%- endstyle -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+
+  {%- if quick_shop_enable and type == blank -%}
+    {%- render 'quick-shop-modal', product: product -%}
+  {%- endif -%}
+</div>

@@ -1,0 +1,254 @@
+{%- form 'product', product, id: form_id, class: 'product-single__form' -%}
+
+  {%- liquid
+    assign gift_card_recipient_feature_active = false
+    if block.settings.show_gift_card_recipient and product.gift_card?
+      assign gift_card_recipient_feature_active = true
+    endif
+
+    assign enable_dynamic_buttons = false
+    if show_dynamic_checkout and template != 'product.preorder' and gift_card_recipient_feature_active == false
+      assign enable_dynamic_buttons = true
+    endif
+  -%}
+
+  {% comment %} show store availability {% endcomment %}
+  {% if section.settings.enable_store_avaialability %}
+    {% render 'store-availability', blocks: blocks %}
+  {% endif %}
+
+  {% comment %} check if product contains "onlineonly" tag {% endcomment %}
+  {% assign online_sold_out = false %}
+  {% unless product.tags contains "onlineonly" %}
+    {% assign online_qty = 0 %}
+    {% assign others_qty = 0 %}
+    {% for field in current_variant.metafields.sf_location_inv %}
+      {% assign others_qty = others_qty | plus: field.last %}
+    {% endfor %}
+
+    {% comment %} mark product as soldout if MikesBikes Online Inventory are only available {% endcomment %}
+    {% if others_qty < 1 %}
+      {% assign online_sold_out = true %}
+    {% endif %}
+  {% endunless %}
+
+  {%- if gift_card_recipient_feature_active -%}
+    {%- render 'gift-card-recipient-form', product: product, form: form, section: section -%}
+  {%- endif -%}  {%- if enable_dynamic_buttons -%}
+    <div class="payment-buttons">
+  {%- endif -%}
+
+    {%- liquid
+      assign default_text = 'products.product.add_to_cart' | t
+      assign button_text = 'products.product.add_to_cart' | t
+      if template contains 'preorder'
+        assign default_text = 'products.product.preorder' | t
+        assign button_text = 'products.product.preorder' | t
+      endif
+      unless current_variant.available
+        assign button_text = 'products.product.sold_out' | t
+      endunless
+    -%}
+
+      {% comment %} This block displays the NFC Test Ride CTA {% endcomment %}
+
+    {% if product.type contains 'BIKES AND FRAMES' %}
+      {%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
+      {%- assign pageUrlWithoutHost = contentForQuerystring
+        | split:'"pageurl":"'
+        | last
+        | split:'"'
+        | first
+        | split:'.myshopify.com'
+        | last -%}
+
+      {% if pageUrlWithoutHost contains 'testride' %}
+        {% assign variant = current_variant | default: product.selected_or_first_available_variant %}
+        <div style="background-color: white; padding-top: 10px; margin-bottom: 10px;">
+          <a class="btn" style="width: 100%;"
+             href="https://form.jotform.com/250797398484174?brand={{ product.vendor }}&color-size={{ variant.title }}&model={{ product.title }}&amount={{ current_variant.price | money_without_currency | remove: ',' }}">
+            Test Ride
+          </a>
+        </div>
+      {% endif %}
+    {% endif %} 
+
+
+  {% comment %} This block displays 'Special Order Message' {% endcomment %}
+
+<script id="special-order-data-{{ section.id }}" type="application/json">
+{
+  {% for v in product.variants %}
+    {% assign regular_store_total = 0 %}
+    {% assign special_order_total = 0 %}
+
+    {% if v.metafields.sf_location_inv %}
+      {% for field in v.metafields.sf_location_inv %}
+        {% assign store_name = field | first | replace: '_', ' ' %}
+        {% assign store_inv = field | last %}
+
+        {% if store_name contains 'special' or store_name == 'special order' %}
+          {% assign special_order_total = special_order_total | plus: store_inv %}
+        {% else %}
+          {% assign regular_store_total = regular_store_total | plus: store_inv %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {% assign v_is_special = false %}
+    {% if regular_store_total < 1 and special_order_total > 0 %}
+      {% assign v_is_special = true %}
+    {% endif %}
+
+    "{{ v.id }}": {
+      "is_special_order": {{ v_is_special | json }},
+      "shipdate": {% if v.metafields.global.shipdate != blank %}
+        {{ v.metafields.global.shipdate | date: "%B %d, %Y" | json }}
+      {% else %}
+        null
+      {% endif %}
+    }{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+}
+</script>
+
+<div id="special-order-message-{{ section.id }}" class="special_message" style="display:none; margin-top:8px;">
+  <p class="special_message" style="margin:0;"></p>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('{{ form_id }}');
+    if (!form) return;
+
+    var variantSelect = form.querySelector('select[name="id"]');
+    var fixedVariantId = '{{ product.selected_or_first_available_variant.id }}';
+
+    var dataScript = document.getElementById('special-order-data-{{ section.id }}');
+    if (!dataScript) return;
+
+    var mapping;
+    try {
+      mapping = JSON.parse(dataScript.textContent);
+    } catch (e) {
+      return;
+    }
+
+    var container = document.getElementById('special-order-message-{{ section.id }}');
+    if (!container) return;
+    var textEl = container.querySelector('.special_message');
+
+    var addToCartBtn = form.querySelector('[data-add-to-cart]');
+    var addToCartText = form.querySelector('[data-add-to-cart-text]');
+
+    function getSelectedVariantId() {
+      if (variantSelect) return variantSelect.value;
+      return fixedVariantId;
+    }
+
+    function updateSpecialOrderMessage() {
+      var vid = getSelectedVariantId();
+      var info = mapping[vid];
+
+      // Not special-order: hide message, remove special styling, leave text as theme set it
+      if (!info || !info.is_special_order) {
+        container.style.display = 'none';
+        textEl.textContent = '';
+        if (addToCartBtn) addToCartBtn.classList.remove('special-order-button');
+        return;
+      }
+
+      // Special-order variant: build message
+      var msg = '';
+
+      if (info.shipdate) {
+        msg =
+          'This item is already allocated to us so you can order with confidence.\n\n' +
+          'Estimated Ship Date:\n' + info.shipdate;
+      } else {
+        msg = 'This is a special order item. Allow extra time for delivery.';
+      }
+
+      textEl.textContent = msg;
+      container.style.display = '';
+
+      // Style CTA for special-order variant
+      if (addToCartBtn) addToCartBtn.classList.add('special-order-button');
+      if (addToCartText) addToCartText.textContent = 'SPECIAL ORDER THIS ITEM';
+    }
+
+    if (variantSelect) {
+      variantSelect.addEventListener('change', updateSpecialOrderMessage);
+    }
+
+    updateSpecialOrderMessage();
+  });
+</script>
+
+    <button
+      {% if product.empty? %}type="button"{% else %}type="submit"{% endif %}
+      data-add-to-cart
+      name="add"
+      data-special-order="SPECIAL ORDER THIS ITEM"
+      id="AddToCart-{{ section_id }}"
+      class="btn btn--full add-to-cart
+      {% if enable_dynamic_buttons %} btn--secondary{% endif %} 
+      {% if is_special_order and product.variants.size == 1 and variantIsSoldOut != true %}special-order-button{% endif %}"
+      {% unless current_variant.available or current_variant.inventory_quantity > 0 or current_variant.incoming or template == 'product.preorder' %} disabled="disabled" {% endunless %} 
+      {% if online_sold_out and continueSelling == false %} disabled="disabled" {% endif %}
+      {% if variantIsSoldOut == true %} disabled="disabled" {% endif %}>
+      <span id="AddToCartText-{{ section_id }}" data-add-to-cart-text data-default-text="{{ 'products.product.add_to_cart' | t }}">
+        {% if variantIsSoldOut %}
+          {{ 'products.product.sold_out' | t }}
+        {% elsif template == 'product.preorder' %}
+          {{ 'products.product.preorder' | t }}
+        {% elsif current_variant.incoming and current_variant.inventory_quantity == 0 %}
+          SPECIAL ORDER ITEM - Allow 2 Weeks
+        {% elsif is_special_order and product.variants.size == 1 %}
+        {% comment %} this is for product without variants {% endcomment %}
+          SPECIAL ORDER THIS ITEM
+        {% elsif online_sold_out and continueSelling == false %}
+            {{ 'products.product.sold_out' | t }}
+        {% elsif current_variant.inventory_quantity <= 0 and current_variant.available != true %}
+          {{ 'products.product.sold_out' | t }}
+        {% else %}
+          {{ 'products.product.add_to_cart' | t }}
+        {% endif %}
+      </span>
+      <span class="special-order-button"></span>
+
+    </button>
+      
+          {% if product.tags contains 'Category_Frames' %}
+<div style="margin-top: 5px;">
+      <a class="btn hs-cta-trigger-button hs-cta-trigger-button-169092939564" style="display: block;">
+        CUSTOM BUILD THIS FRAME 
+      </a></div>
+    {% endif %} 
+
+    {%- if enable_dynamic_buttons -%}
+      {{ form | payment_button }}
+    {%- endif -%}
+
+  {%- if enable_dynamic_buttons -%}
+    </div>
+  {%- endif -%}
+
+  <div class="shopify-payment-terms product__policies">{{ form | payment_terms }}</div>
+
+  <select name="id" data-product-select class="product-single__variants no-js">
+    {%- for variant in product.variants -%}
+      {%- if variant.available -%}
+        <option {% if variant == product.selected_or_first_available_variant %}
+          selected="selected"{% endif %}
+          value="{{ variant.id }}">
+          {{ variant.title }} - {{ variant.price | money_with_currency }}
+        </option>
+      {%- else -%}
+        <option disabled="disabled">
+          {{ variant.title }} - {{ 'products.product.sold_out' | t }}
+        </option>
+      {%- endif -%}
+    {%- endfor -%}
+  </select>
+{%- endform -%}

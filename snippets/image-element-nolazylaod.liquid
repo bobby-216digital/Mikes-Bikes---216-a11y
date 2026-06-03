@@ -1,0 +1,42 @@
+{% liquid
+  assign classes = classes | escape
+  assign alt = alt | escape
+
+  if loading == null
+    assign loading = 'lazy'
+  endif
+
+  if forloop_index == 1
+    assign fetch_p = 'high'
+  else
+    assign fetch_p = 'low'
+  endif
+
+  # Base medium and small size off of original image width/height
+
+  if img_height != blank
+    assign med_size = img_height | divided_by: 1.5 | ceil
+    assign sml_size = med_size | divided_by: 1.5 | ceil
+  else
+    assign med_size = img_width | divided_by: 1.5 | ceil
+    assign sml_size = med_size | divided_by: 1.5 | ceil
+  endif
+
+  if sizes == blank
+    assign sizes = null
+  endif
+%}
+
+{% if img_height != blank %}
+    {% if forloop_index == 1 %}
+        {{ img | image_url: height: img_height | image_tag: preload: preload , class: classes, fetchpriority: fetch_p, alt: alt, sizes: sizes }}
+    {% else %}
+        {{ img | image_url: height: img_height | image_tag: preload: preload , class: classes, fetchpriority: fetch_p, loading: loading, alt: alt, sizes: sizes }}
+    {% endif %}
+  {% else %}
+  {% if forloop_index == 1 %}
+        {{ img | image_url: width: img_width | image_tag: preload: preload, class: classes, fetchpriority: fetch_p, alt: alt, sizes: sizes }}
+    {% else %}
+        {{ img | image_url: width: img_width | image_tag: preload: preload, class: classes, fetchpriority: fetch_p, loading: loading, alt: alt, sizes: sizes }}
+  {% endif %} 
+  {% endif %}

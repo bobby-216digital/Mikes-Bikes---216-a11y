@@ -1,0 +1,31 @@
+{% if template contains 'index' or template contains 'collection' %} 
+  <script type="noscript-s" >
+    window.zESettings = {
+      webWidget: {
+        offset: { horizontal: '10px', vertical: '10px' },
+        chat: { connectOnPageLoad: {% if template == "product" or template == "collection" or template == "page.shogun" or template == "collection.shogun" %}true{% else %}false{% endif %} }
+    }
+  };
+  </script>
+  
+  <!-- Start of mikesbikes Zendesk Widget script -->
+  <script id="ze-snippet" type="noscript-s" data-src="https://static.zdassets.com/ekr/snippet.js?key=28a151bb-33df-41fa-b41f-73e5a0851f9d">
+  </script>
+  <!-- End of mikesbikes Zendesk Widget script -->
+{% else %}
+  <script>
+    window.zESettings = {
+      webWidget: {
+        offset: { horizontal: '10px', vertical: '10px' },
+        chat: { connectOnPageLoad: {% if template == "product" or template == "collection" or template == "page.shogun" or template == "collection.shogun" %}true{% else %}false{% endif %} }
+    }
+  };
+  </script>
+  
+  <!-- Start of mikesbikes Zendesk Widget script -->
+  <script id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=28a151bb-33df-41fa-b41f-73e5a0851f9d">
+  </script>
+  <!-- End of mikesbikes Zendesk Widget script -->
+{% endif %}
+
+

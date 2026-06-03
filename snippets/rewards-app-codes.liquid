@@ -1,0 +1,58 @@
+<link rel="stylesheet" data-href="https://integrations.kangarooapis.com/shopify/initCSS?shop=mikesbikesusa.myshopify.com" type="text/css">
+<script  {% if template contains 'index' or template contains 'collection' %} type="noscript-s"  {% endif %}>
+    var KangarooApps = KangarooApps || {};
+    KangarooApps.Loyalties = KangarooApps.Loyalties || {};
+    {%- if customer -%}
+        KangarooApps.Loyalties.customer = {
+            id: "{{ customer.id }}"
+        }; 
+    {%- endif -%} 
+    {% if template contains 'product' %}
+        KangarooApps.Loyalties.product = {
+            id: "{{ product.id }}",
+            categories: [],
+        }
+        {% for collection in product.collections %}
+            KangarooApps.Loyalties.product.categories.push("{{ collection.id }}")
+        {% endfor %}
+    {% endif %} 
+    KangarooApps.Loyalties.shop = {
+        domain: 'mikesbikesusa.myshopify.com'
+    };
+</script>
+{% if template contains 'index' or template contains 'collection' %} 
+    <script  type="noscript-s"  data-src="https://integrations.kangarooapis.com/shopify/initJS?shop=mikesbikesusa.myshopify.com"></script>
+{% else %}
+    <script  src="https://integrations.kangarooapis.com/shopify/initJS?shop=mikesbikesusa.myshopify.com"></script>
+{% endif %}
+<div class="kangaroo-container" style="display: none">
+    <div class="wrapper">
+        <div class="arrow arrow-top"></div>
+        <div class="kangaroo-inner">
+            <div class="kangaroo-controls">
+            </div>
+            <div class="kangaroo-items">
+                <div class="message points item"></div>
+            </div>
+        </div>
+        <div class="arrow kangaroo-arrow"></div>
+    </div>
+</div>
+<div class="kangaroo-widget" style="display: none">
+    <div class="kangaroo-wrapper">
+        <div class="points">
+            <span class="amount"></span>
+        </div>
+        <div class="name-box">
+            <div class="arrow">
+                <span class="kangaroo-icon kangaroo-icon-up-arrow" id='kangaroo-icon-program-name'></span>
+            </div>
+            <span class="name"></span>
+        </div>
+        <br style="clear:both">
+    </div>
+</div>
+<div class="kangaroo-welcome-overlay" style="display: none">
+  <div class="kangaroo-welcome-modal"></div>
+</div>
+<!-- END app app block -->

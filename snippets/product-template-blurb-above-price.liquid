@@ -1,0 +1,100 @@
+{% comment %}
+This code displays BOGO messaging based on tags
+{% endcomment %}
+
+{% if product.tags contains 'buy3' %}
+	<div style="text-align: center; background-color: #C20000; color: white; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">BUY 3 GET 1 FREE </div>
+{% endif %}
+
+{% if product.tags contains 'buy2' %}
+	<div style="text-align: center; background-color: #C20000; color: white; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">BUY 2 GET 1 FREE </div>
+{% endif %}
+
+{% if product.tags contains 'buy1' %}
+	<div style="text-align: center; background-color: #C20000; color: white; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">BUY 1 GET 1 FREE </div>
+{% endif %}
+
+{% comment %}
+This code hides deafult Sychrony messaging based on tags
+
+{% if product.tags contains '24mo' %}
+<style>
+.sync-price {display:none !important;}
+  </style>
+{% endif %}
+ {% endcomment %}
+
+{% comment %}
+This code hides deafult Pay with Flex messaging for products that are not tagged
+{% endcomment %}
+
+{% unless product.tags contains 'hsaeligible' %}
+  <style>
+    /* Hide just the badge image */
+    img[src*="flex-product-badge"] { display: none !important; }
+
+    /* Hide the modal that follows the image */
+    img[src*="flex-product-badge"] + dialog { display: none !important; }
+
+    /* (Optional) if your theme renders a backdrop */
+    img[src*="flex-product-badge"] + dialog::backdrop { display: none !important; }
+
+  </style>
+{% endunless %}
+
+{% comment %}
+This code displays limited-time financing banner
+
+{% if product.tags contains '24mosynchrony' %}
+	<div style="text-align: center; background-color: #C20000; color: white; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">Limited-Time 24-Month Financing</div>
+{% endif %}
+ {% endcomment %}
+
+{% comment %}
+This code displays limited-time promo banner
+
+{% if product.tags contains 'Extra500off' %}
+  <a href="https://mikesbikes.com/pages/offer-terms-and-conditions" style="text-decoration: none;">
+    <div style="text-align: center; background-color: #00adef; color: #f7ff3c; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+      EXTRA $500 OFF | AUTO DISCOUNT IN CART
+    </div>
+  </a>
+{% endif %}
+{% endcomment %}
+
+
+{% comment %}
+This code displays limited-time shipping banner
+
+{% unless product.tags contains 'kid-bike' or product.vendor == 'Public Bikes' or product.tags contains 'builtnoship' or product.tags contains 'noship' %}
+{% if product.type contains 'BIKES AND FRAMES/BIKES' %}
+  <a href="https://mikesbikes.com/pages/offer-terms-and-conditions" style="text-decoration: none;">
+    <div style="text-align: center; background-color: #be3027; color: white; padding: 8px 16px; font-weight: 800; font-size: 15px; display: inline-block; border-radius: 4px;">
+      FREE BIKE SHIPPING | USE CODE FREESHIP
+    </div>
+  </a>
+{% endif %}
+{% endunless %}
+ {% endcomment %}
+
+ {% comment %}
+This code displays limited-time Get Carded promo banner
+
+{% unless product.type contains 'GIFT CARD' or product.type contains 'Get Carded' or product.type contains 'LABOR' or product.type contains 'MISC' %}
+{% if product.compare_at_price > 0 %}
+  <a href="https://mikesbikes.com/pages/get-carded-for-the-holidays" style="text-decoration: none;">
+    <div style="text-align: center; background-color: #024b26; color: white; padding: 8px 16px; font-weight: 800; font-size: 14px; display: inline-block; border-radius: 4px;">
+      EARN UP TO $600 IN REWARDS | ENDS 12/24
+    </div>
+  </a>
+{% endif %}
+{% endunless %}
+{% endcomment %}
+
+{% comment %}
+Mega Sale Add to Cart for Price  
+          
+{% if product.tags contains 'addtocart' %}
+	<div style="color: red; font-size: 14px; font-weight: 800;">ADD TO CART FOR MEGA PRICE</div>
+{% endif %}
+{% endcomment %} 

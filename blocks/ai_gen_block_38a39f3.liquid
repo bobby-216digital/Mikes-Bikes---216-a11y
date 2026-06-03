@@ -1,0 +1,733 @@
+{% doc %}
+  @prompt
+    Build a “text columns with images" section that lets merchants feature a row of subcollections (up to 8) with custom images and custom image links.
+    
+    Core requirements
+    
+    Each slide = image + title + optional subtitle + button
+    
+    Merchant can override the collection image with a custom image and override the link with a custom URL (not required to point to the collection).
+    
+    Max rendered image dimension: 600px on the longest side (never exceed 600px even on desktop; scale responsively below that)., Add the ability to select how many columns display on desktop and mobile.
+    
+    Add customization options for padding and image alignment. Section should include a heading, Let's set max width to 1400px, Include custom size for buttons, The button should not be full width. Maybe use auto width?
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-text-columns-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+    padding: {{ block.settings.padding_top }}px 0 {{ block.settings.padding_bottom }}px;
+  }
+
+  .ai-text-columns-container-{{ ai_gen_id }} {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .ai-text-columns-heading-{{ ai_gen_id }} {
+    text-align: center;
+    margin: 0 0 40px;
+    font-size: {{ block.settings.heading_size }}px;
+    color: {{ block.settings.heading_color }};
+  }
+
+  .ai-text-columns-grid-{{ ai_gen_id }} {
+    display: grid;
+    gap: {{ block.settings.grid_gap }}px;
+    grid-template-columns: repeat({{ block.settings.columns_desktop }}, 1fr);
+  }
+
+  .ai-text-columns-item-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    text-align: {{ block.settings.text_alignment }};
+    {% if block.settings.text_alignment == 'center' %}
+      align-items: center;
+    {% elsif block.settings.text_alignment == 'right' %}
+      align-items: flex-end;
+    {% else %}
+      align-items: flex-start;
+    {% endif %}
+  }
+
+  .ai-text-columns-image-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    width: 100%;
+    margin-bottom: 16px;
+    overflow: hidden;
+    border-radius: {{ block.settings.image_border_radius }}px;
+  }
+
+  .ai-text-columns-image-wrapper-{{ ai_gen_id }} a {
+    display: block;
+  }
+
+  .ai-text-columns-image-{{ ai_gen_id }} {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .ai-text-columns-image-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    aspect-ratio: 1;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: {{ block.settings.image_border_radius }}px;
+  }
+
+  .ai-text-columns-image-placeholder-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+    max-width: 600px;
+  }
+
+  .ai-text-columns-title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.title_size }}px;
+    color: {{ block.settings.title_color }};
+    margin: 0 0 8px;
+  }
+
+  .ai-text-columns-subtitle-{{ ai_gen_id }} {
+    font-size: {{ block.settings.subtitle_size }}px;
+    color: {{ block.settings.subtitle_color }};
+    margin: 0 0 16px;
+  }
+
+  .ai-text-columns-button-{{ ai_gen_id }} {
+    display: inline-block;
+    padding: {{ block.settings.button_padding_vertical }}px {{ block.settings.button_padding_horizontal }}px;
+    background-color: {{ block.settings.button_color }};
+    color: {{ block.settings.button_text_color }};
+    text-decoration: none;
+    border-radius: {{ block.settings.button_border_radius }}px;
+    font-size: {{ block.settings.button_font_size }}px;
+    transition: background-color 0.3s ease;
+    width: auto;
+  }
+
+  .ai-text-columns-button-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_color }};
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-text-columns-grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_mobile }}, 1fr);
+    }
+
+    .ai-text-columns-heading-{{ ai_gen_id }} {
+      font-size: calc({{ block.settings.heading_size }}px * 0.8);
+      margin-bottom: 24px;
+    }
+  }
+{% endstyle %}
+
+<text-columns-{{ ai_gen_id }} class="ai-text-columns-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-text-columns-container-{{ ai_gen_id }}">
+    {% if block.settings.heading != blank %}
+      <h2 class="ai-text-columns-heading-{{ ai_gen_id }}">{{ block.settings.heading }}</h2>
+    {% endif %}
+
+    <div class="ai-text-columns-grid-{{ ai_gen_id }}">
+      {% for i in (1..8) %}
+        {% liquid
+          assign collection_key = 'collection_' | append: i
+          assign custom_image_key = 'custom_image_' | append: i
+          assign custom_url_key = 'custom_url_' | append: i
+          assign title_key = 'title_' | append: i
+          assign subtitle_key = 'subtitle_' | append: i
+          assign button_text_key = 'button_text_' | append: i
+
+          assign collection = block.settings[collection_key]
+          assign custom_image = block.settings[custom_image_key]
+          assign custom_url = block.settings[custom_url_key]
+          assign title = block.settings[title_key]
+          assign subtitle = block.settings[subtitle_key]
+          assign button_text = block.settings[button_text_key]
+
+          if custom_image != blank
+            assign image = custom_image
+          elsif collection != blank
+            assign image = collection.image
+          else
+            assign image = blank
+          endif
+
+          if custom_url != blank
+            assign url = custom_url
+          elsif collection != blank
+            assign url = collection.url
+          else
+            assign url = blank
+          endif
+
+          if title == blank and collection != blank
+            assign title = collection.title
+          endif
+        %}
+
+        {% if collection != blank or custom_image != blank or title != blank %}
+          <div class="ai-text-columns-item-{{ ai_gen_id }}">
+            <div class="ai-text-columns-image-wrapper-{{ ai_gen_id }}">
+              {% if url != blank %}
+                <a href="{{ url }}">
+              {% endif %}
+                {% if image != blank %}
+                  <img
+                    src="{{ image | image_url: width: 600 }}"
+                    alt="{{ image.alt | escape }}"
+                    loading="lazy"
+                    width="600"
+                    height="{{ 600 | divided_by: image.aspect_ratio | round }}"
+                    class="ai-text-columns-image-{{ ai_gen_id }}"
+                  >
+                {% else %}
+                  <div class="ai-text-columns-image-placeholder-{{ ai_gen_id }}">
+                    {{ 'collection-1' | placeholder_svg_tag }}
+                  </div>
+                {% endif %}
+              {% if url != blank %}
+                </a>
+              {% endif %}
+            </div>
+
+            {% if title != blank %}
+              <h3 class="ai-text-columns-title-{{ ai_gen_id }}">{{ title }}</h3>
+            {% endif %}
+
+            {% if subtitle != blank %}
+              <p class="ai-text-columns-subtitle-{{ ai_gen_id }}">{{ subtitle }}</p>
+            {% endif %}
+
+            {% if button_text != blank and url != blank %}
+              <a href="{{ url }}" class="ai-text-columns-button-{{ ai_gen_id }}">
+                {{ button_text }}
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</text-columns-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class TextColumns{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+      }
+    }
+
+    customElements.define('text-columns-{{ ai_gen_id }}', TextColumns{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Text columns with images",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured collections"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size",
+      "min": 16,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 32
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Columns on desktop",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns on mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "range",
+      "id": "grid_gap",
+      "label": "Space between columns",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "header",
+      "content": "Image style"
+    },
+    {
+      "type": "range",
+      "id": "image_border_radius",
+      "label": "Image border radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Text style"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Title size",
+      "min": 12,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "label": "Subtitle size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle color",
+      "default": "#666666"
+    },
+    {
+      "type": "header",
+      "content": "Button style"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Background color",
+      "default": "#00337f"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_color",
+      "label": "Hover background color",
+      "default": "#002050"
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "button_padding_vertical",
+      "label": "Vertical padding",
+      "min": 4,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "button_padding_horizontal",
+      "label": "Horizontal padding",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "header",
+      "content": "Column 1"
+    },
+    {
+      "type": "collection",
+      "id": "collection_1",
+      "label": "Collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "custom_image_1",
+      "label": "Custom image"
+    },
+    {
+      "type": "url",
+      "id": "custom_url_1",
+      "label": "Custom link"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title_1",
+      "label": "Title"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle_1",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_text_1",
+      "label": "Button text"
+    },
+    {
+      "type": "header",
+      "content": "Column 2"
+    },
+    {
+      "type": "collection",
+      "id": "collection_2",
+      "label": "Collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "custom_image_2",
+      "label": "Custom image"
+    },
+    {
+      "type": "url",
+      "id": "custom_url_2",
+      "label": "Custom link"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title_2",
+      "label": "Title"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle_2",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_text_2",
+      "label": "Button text"
+    },
+    {
+      "type": "header",
+      "content": "Column 3"
+    },
+    {
+      "type": "collection",
+      "id": "collection_3",
+      "label": "Collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "custom_image_3",
+      "label": "Custom image"
+    },
+    {
+      "type": "url",
+      "id": "custom_url_3",
+      "label": "Custom link"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title_3",
+      "label": "Title"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle_3",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_text_3",
+      "label": "Button text"
+    },
+    {
+      "type": "header",
+      "content": "Column 4"
+    },
+    {
+      "type": "collection",
+      "id": "collection_4",
+      "label": "Collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "custom_image_4",
+      "label": "Custom image"
+    },
+    {
+      "type": "url",
+      "id": "custom_url_4",
+      "label": "Custom link"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title_4",
+      "label": "Title"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle_4",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_text_4",
+      "label": "Button text"
+    },
+    {
+      "type": "header",
+      "content": "Column 5"
+    },
+    {
+      "type": "collection",
+      "id": "collection_5",
+      "label": "Collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "custom_image_5",
+      "label": "Custom image"
+    },
+    {
+      "type": "url",
+      "id": "custom_url_5",
+      "label": "Custom link"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title_5",
+      "label": "Title"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle_5",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_text_5",
+      "label": "Button text"
+    },
+    {
+      "type": "header",
+      "content": "Column 6"
+    },
+    {
+      "type": "collection",
+      "id": "collection_6",
+      "label": "Collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "custom_image_6",
+      "label": "Custom image"
+    },
+    {
+      "type": "url",
+      "id": "custom_url_6",
+      "label": "Custom link"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title_6",
+      "label": "Title"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle_6",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_text_6",
+      "label": "Button text"
+    },
+    {
+      "type": "header",
+      "content": "Column 7"
+    },
+    {
+      "type": "collection",
+      "id": "collection_7",
+      "label": "Collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "custom_image_7",
+      "label": "Custom image"
+    },
+    {
+      "type": "url",
+      "id": "custom_url_7",
+      "label": "Custom link"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title_7",
+      "label": "Title"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle_7",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_text_7",
+      "label": "Button text"
+    },
+    {
+      "type": "header",
+      "content": "Column 8"
+    },
+    {
+      "type": "collection",
+      "id": "collection_8",
+      "label": "Collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "custom_image_8",
+      "label": "Custom image"
+    },
+    {
+      "type": "url",
+      "id": "custom_url_8",
+      "label": "Custom link"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title_8",
+      "label": "Title"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle_8",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_text_8",
+      "label": "Button text"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Text columns with images"
+    }
+  ]
+}
+{% endschema %}

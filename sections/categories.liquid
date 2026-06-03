@@ -1,0 +1,201 @@
+{{ 'component-categories-wrapper.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'component-categories-wrapper.js' | asset_url }}" type="module" defer="defer"></script>
+
+{%- assign mod_section = section.settings -%}
+
+<categories-wrapper
+  class="section-categories"
+  style="
+    --section-overlay-color: {{ mod_section.overlay_color }};
+    --section-overlay-opacity: calc({{ mod_section.overlay_opacity }} / 100);
+    --section-button-color: {{ mod_section.button_color | default: '#003282' }};
+  "
+>
+  <div class="categories-inner w1">
+    <div class="categories-content swiper w1">
+      <div class="js-slider w1">
+        <div class="swiper-wrapper w1">
+          {%- for block in section.blocks -%}
+            {%- assign mod_block = block.settings -%}
+            <div class="category-item swiper-slide category-item--{{ mod_section.item_type }}">
+              <div class="category-item__image">
+                {%- if mod_block.image != blank -%}
+                  {%- assign img_url = mod_block.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' -%}
+                  <img
+                    class="image-fit lazyloaded"
+                    src="{{ mod_block.image | img_url: '300x' }}"
+                    data-src="{{ img_url }}"
+                    data-aspectratio="{{ mod_block.image.aspect_ratio }}"
+                    data-sizes="auto"
+                    alt="{{ mod_block.image.alt | escape }}"
+                  >
+                  <noscript>
+                    <img
+                      class="image-fit lazyloaded"
+                      src="{{ mod_block.image | img_url: '1800x' }}"
+                      alt="{{ mod_block.image.alt }}"
+                    >
+                  </noscript>
+                {%- else -%}
+                  {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                {%- endif -%}
+              </div>
+              <div class="category-item__content type-advanced">
+                <div class="category-item__content-inner">
+                  {%- if mod_block.subtitle != blank -%}
+                    <div class="category-item__subtitle rte--block rte--em">
+                      {{ mod_block.subtitle }}
+                    </div>
+                  {%- endif -%}
+
+                  {%- if mod_block.title != blank -%}
+                    <div class="category-item__title rte--block rte--strong">
+                      {{ mod_block.title }}
+                    </div>
+                  {%- endif -%}
+
+                  {%- if mod_block.detail != blank -%}
+                    <div class="category-item__detail rte--block">
+                      {{ mod_block.detail }}
+                    </div>
+                  {%- endif -%}
+
+                  {%- if mod_block.button_url != blank and mod_block.button_text != blank -%}
+                    <a href="{{ mod_block.button_url }}" class="btn">
+                      {{- mod_block.button_text -}}
+                    </a>
+                  {%- endif -%}
+                </div>
+              </div>
+
+              {%- if mod_block.button_url != blank -%}
+                <a href="{{ mod_block.button_url }}" class="category-item__overlay-link"></a>
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+
+    <button class="categories-slider__arrow categories-slider__arrow__left js-slider-prev" aria-label="Prev">
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        role="presentation"
+        class="icon icon--wide icon-chevron-down"
+        viewBox="0 0 28 16"
+      >
+        <path d="M1.57 1.59l12.76 12.77L27.1 1.59" stroke-width="2" stroke="#000" fill="none" fill-rule="evenodd"/>
+      </svg>
+    </button>
+    <button class="categories-slider__arrow categories-slider__arrow__right js-slider-next" aria-label="Next">
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        role="presentation"
+        class="icon icon--wide icon-chevron-down"
+        viewBox="0 0 28 16"
+      >
+        <path d="M1.57 1.59l12.76 12.77L27.1 1.59" stroke-width="2" stroke="#000" fill="none" fill-rule="evenodd"/>
+      </svg>
+    </button>
+
+    <div class="swiper-pagination js-swiper-pagination categories-slider__pagination"></div>
+  </div>
+</categories-wrapper>
+
+{% schema %}
+{
+  "name": "t:sections.categories.name",
+  "class": "index-section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "item_type",
+      "label": "t:sections.categories.settings.item_type.label",
+      "options": [
+        {
+          "value": "overlay",
+          "label": "t:sections.categories.settings.item_type.options__1.label"
+        },
+        {
+          "value": "stacked",
+          "label": "t:sections.categories.settings.item_type.options__2.label"
+        }
+      ],
+      "default": "overlay"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "t:sections.categories.settings.overlay_color.label",
+      "default": "#000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "t:sections.categories.settings.overlay_opacity.label",
+      "info": "t:sections.categories.settings.overlay_opacity.info",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default":0
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "t:sections.categories.settings.button_color.label",
+      "default": "#003282"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "t:sections.categories.blocks.category.name",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.categories.blocks.category.settings.image.label"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "t:sections.categories.blocks.category.settings.subtitle.label"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.categories.blocks.category.settings.title.label"
+        },
+        {
+          "type": "textarea",
+          "id": "detail",
+          "label": "t:sections.categories.blocks.category.settings.detail.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.categories.blocks.category.settings.header__button.content"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "t:sections.categories.blocks.category.settings.button_text.label",
+          "default": "Shop Now"
+        },
+        {
+          "type": "url",
+          "id": "button_url",
+          "label": "t:sections.categories.blocks.category.settings.button_url.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.categories.presets.name"
+    }
+  ]
+}
+{% endschema %}

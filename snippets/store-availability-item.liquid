@@ -1,0 +1,45 @@
+{% capture store_name %}{{ store_name }}{% endcapture %}
+{% capture store_metafield %}{{ store_metafield }}{% endcapture %}
+
+
+{% comment %} metafield combination {% endcomment %}
+{% comment %} <!-- {{ store_name }} - {{ store_metafield }} --> {% endcomment %}
+{% if store_metafield contains "," %}
+  {% assign store_total = 0 %}
+  {% assign stores = store_metafield | split: ',' %}
+
+  {% for store in stores %}
+    {% assign store_field = variant.metafields.sf_location_inv[store] %}
+    {% assign store_total = store_total | plus: store_field %}
+  {% endfor %}
+
+  {% assign availability = store_total %}
+{% else %}
+  {% assign availability = variant.metafields.sf_location_inv[store_metafield] | plus: 0 %}
+{% endif %}
+
+
+{% if availability > 0 %}
+  {% assign availability_text = section.settings.available_label %}
+{% elsif availability contains 'business' or availability < 1 %}
+  {% assign availability_text = section.settings.not_available_label %}
+  {% assign availability_text_long = section.settings.not_available_label_long %}
+{% endif %}
+
+{% unless store_name contains "special" or store_name == "special order" %}
+  <li class="list-item clearfix {% if block.settings.store_link != blank %}has-link{% endif %}" data-name="{{ store_name | handleize }}-{{ store_metafield | handleize }}">
+    {% if block.settings.store_link != blank %}
+      <a href="{{ block.settings.store_link }}" target="_blank" class="clearfix">
+    {% endif %}
+
+    <span class="location">{{ store_name }}</span>
+    <span class="status {% if availability contains 'business' or availability < 1 %}text-note{% endif %}">
+      <span class="lead-time-1">{{ availability_text }}</span>
+      <span class="lead-time-2">{{ availability_text_long }}</span>
+    </span>
+
+    {% if block.settings.store_link != blank %}
+      </a>
+    {% endif %}
+  </li>
+{% endunless %}

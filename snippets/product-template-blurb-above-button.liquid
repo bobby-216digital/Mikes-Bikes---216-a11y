@@ -1,0 +1,60 @@
+
+{% if product.tags contains 'sbccloseout' %}
+     <div style="color: red; font-size: 14px; font-weight: 800;">All Sales are FINAL on Specialized Apparel Closeouts. No Returns.</div>
+{% endif %}
+
+{% comment %}
+All CLOSEOUT Items Are Final Sale
+{% endcomment %}
+
+{% if product.tags contains 'closeout' %}
+     <div style="color: red; font-size: 14px; font-weight: 800;">All sales are FINAL on closeout items. No Returns.</div>
+{% endif %}
+
+{% comment %}
+This adds additional language that an item is not elgible for discounts due to manufacturer restrictions.
+{% endcomment %}
+
+{% if product.tags contains 'ncdexclude' %}
+     <div style="color: red; font-size: 14px; font-weight: 800; padding-top: 5px;">This item is excluded from promotional discounts.</div>
+{% endif %}
+
+{% comment %}
+{% if product.tags contains 'buy1' %}
+     <div style="color: red; font-size: 14px; font-weight: 800;">Discount applied in cart. No Returns.</div>
+{% endif %}
+{% endcomment %}
+
+{% if product.vendor == 'SixSixOne' %}
+     <div style="color: red; font-size: 14px; font-weight: 800;">Use code SIXSIXONE at checkout. All Sales are FINAL.</div>
+{% endif %}
+
+{% if product.vendor == 'Optic Nerve' and product.price == 1995 %}
+     <div style="color: red; font-size: 14px; font-weight: 800;">Use code OPTICNERVE at checkout. All Sales are FINAL.</div>
+{% endif %}
+
+{% comment %}
+  Get Carded Promo - Pivot 2x Bonus
+
+  {% unless product.tags contains "Sale" %}
+  {% if product.vendor == "Pivot Cycles" %}
+    <div style="color: red; font-size: 14px; font-weight: 800;">All full-priced Pivot Bikes earn double rewards cards.</div>
+    {% endif %}
+  {% endunless %}
+{% endcomment %}
+
+
+{% comment %}
+Free Shipping & Assembly Promotion
+
+{% unless product.tags contains 'noship' or product.tags contains 'Category_Frames' or product.vendor == 'Public Bikes' or product.type contains 'BMX' or product.type contains 'DIRT JUMP' or product.type contains 'KIDS' %}
+{% if product.type contains 'BIKES AND FRAMES' %}
+     <div style="color: #d72121; font-size: 14px; font-weight: 800;"><u><a href="https://mikesbikes.com/pages/offer-terms-and-conditions" style="color: #d72121;"><strong>FREE BIKE SHIPPING</strong></a></u> | Use Code FREESHIP ($100 Value)</div>
+{% endif %}
+{% endunless %}
+{% endcomment %}
+
+
+
+
+

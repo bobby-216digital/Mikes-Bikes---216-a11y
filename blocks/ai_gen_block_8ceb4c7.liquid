@@ -1,0 +1,328 @@
+{% doc %}
+  @prompt
+    A two column CTA block and the CTAs stack on mobile. Basic customizations features
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-cta-block-{{ ai_gen_id }} {
+    padding: {{ block.settings.section_padding }}px 20px;
+    background-color: {{ block.settings.background_color }};
+  }
+
+  .ai-cta-container-{{ ai_gen_id }} {
+    max-width: {{ block.settings.max_width }}px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: {{ block.settings.gap }}px;
+  }
+
+  .ai-cta-item-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: {{ block.settings.item_padding }}px;
+    background-color: {{ block.settings.item_background_color }};
+    border-radius: {{ block.settings.border_radius }}px;
+  }
+
+  .ai-cta-heading-{{ ai_gen_id }} {
+    margin: 0 0 12px;
+    color: {{ block.settings.heading_color }};
+    font-size: {{ block.settings.heading_size }}px;
+  }
+
+  .ai-cta-text-{{ ai_gen_id }} {
+    margin: 0 0 20px;
+    color: {{ block.settings.text_color }};
+    font-size: {{ block.settings.text_size }}px;
+    line-height: 1.5;
+  }
+
+  .ai-cta-button-{{ ai_gen_id }} {
+    display: inline-block;
+    padding: {{ block.settings.button_padding_vertical }}px {{ block.settings.button_padding_horizontal }}px;
+    background-color: {{ block.settings.button_color }};
+    color: {{ block.settings.button_text_color }};
+    text-decoration: none;
+    border-radius: {{ block.settings.button_border_radius }}px;
+    font-size: {{ block.settings.button_text_size }}px;
+    transition: background-color 0.3s ease;
+  }
+
+  .ai-cta-button-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_color }};
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-cta-container-{{ ai_gen_id }} {
+      grid-template-columns: 1fr;
+    }
+  }
+{% endstyle %}
+
+<div class="ai-cta-block-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-cta-container-{{ ai_gen_id }}">
+    <div class="ai-cta-item-{{ ai_gen_id }}">
+      {% if block.settings.heading_1 != blank %}
+        <h3 class="ai-cta-heading-{{ ai_gen_id }}">{{ block.settings.heading_1 }}</h3>
+      {% endif %}
+      {% if block.settings.text_1 != blank %}
+        <div class="ai-cta-text-{{ ai_gen_id }}">{{ block.settings.text_1 }}</div>
+      {% endif %}
+      {% if block.settings.button_text_1 != blank %}
+        <a href="{{ block.settings.button_link_1 }}" class="ai-cta-button-{{ ai_gen_id }}">
+          {{ block.settings.button_text_1 }}
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="ai-cta-item-{{ ai_gen_id }}">
+      {% if block.settings.heading_2 != blank %}
+        <h3 class="ai-cta-heading-{{ ai_gen_id }}">{{ block.settings.heading_2 }}</h3>
+      {% endif %}
+      {% if block.settings.text_2 != blank %}
+        <div class="ai-cta-text-{{ ai_gen_id }}">{{ block.settings.text_2 }}</div>
+      {% endif %}
+      {% if block.settings.button_text_2 != blank %}
+        <a href="{{ block.settings.button_link_2 }}" class="ai-cta-button-{{ ai_gen_id }}">
+          {{ block.settings.button_text_2 }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Two column CTA",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "First CTA"
+    },
+    {
+      "type": "text",
+      "id": "heading_1",
+      "label": "Heading",
+      "default": "First Call to Action"
+    },
+    {
+      "type": "textarea",
+      "id": "text_1",
+      "label": "Text",
+      "default": "Add a compelling message to encourage action."
+    },
+    {
+      "type": "text",
+      "id": "button_text_1",
+      "label": "Button text",
+      "default": "Shop Now"
+    },
+    {
+      "type": "url",
+      "id": "button_link_1",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Second CTA"
+    },
+    {
+      "type": "text",
+      "id": "heading_2",
+      "label": "Heading",
+      "default": "Second Call to Action"
+    },
+    {
+      "type": "textarea",
+      "id": "text_2",
+      "label": "Text",
+      "default": "Add a compelling message to encourage action."
+    },
+    {
+      "type": "text",
+      "id": "button_text_2",
+      "label": "Button text",
+      "default": "Learn More"
+    },
+    {
+      "type": "url",
+      "id": "button_link_2",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "min": 600,
+      "max": 1400,
+      "step": 100,
+      "unit": "px",
+      "label": "Maximum width",
+      "default": 1200
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "unit": "px",
+      "label": "Gap between columns",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "section_padding",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Section padding",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "item_padding",
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "unit": "px",
+      "label": "Item padding",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Item border radius",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Section background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "item_background_color",
+      "label": "Item background",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Button background",
+      "default": "#00337f"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_color",
+      "label": "Button hover background",
+      "default": "#002050"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "min": 16,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "label": "Heading size",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Text size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "button_text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Button text size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "button_padding_vertical",
+      "min": 8,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "label": "Button vertical padding",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "button_padding_horizontal",
+      "min": 16,
+      "max": 48,
+      "step": 4,
+      "unit": "px",
+      "label": "Button horizontal padding",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Button border radius",
+      "default": 4
+    }
+  ],
+  "presets": [
+    {
+      "name": "Two column CTA"
+    }
+  ]
+}
+{% endschema %}

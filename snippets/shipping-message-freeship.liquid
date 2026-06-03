@@ -1,0 +1,69 @@
+{% unless product.tags contains 'noship' or product.tags contains 'Category_Frames' or product.title contains 'Demo' or product.title contains 'Blem' %}
+
+{% comment %} This rule adds the basic FREE Ground Shipping message for PUBLC. {% endcomment %}
+{% if product.tags contains 'Bikes' and product.price > 34999 and product.vendor == 'Public Bikes' %}
+This item is available for FREE Ground Shipping. Professional assembly is required.
+{% endif %}
+
+{% endunless %} 
+
+
+{% unless product.tags contains 'noship' or product.tags contains 'Category_Frames' or product.tags contains 'builtnoship' or product.title contains 'Demo' or product.title contains 'Blem' %}
+ 
+{% comment %} This rule adds the basic FREE Ground Shipping message for Brompton, GoCycle, and Hotwalk/Coasters {% endcomment %}
+{% if product.tags contains 'Bikes' and product.vendor == 'Brompton' or product.vendor == 'GoCycle' or product.vendor == 'Clearly' or product.title == 'Hotwalk' or product.title contains 'Coaster' or product.title contains 'Sprout' or product.title contains 'Sportelite 20' or product.title contains 'Hotrock' %}
+This item is available for FREE Ground Shipping. Some assembly is required.
+{% endif %} 
+
+{% comment %} This rule adds the message for CoMotion, Yuba, Stromer, Gazelle. {% endcomment %}
+{% if product.tags contains '50ship' and product.vendor == 'CoMotion' or product.vendor == 'Yuba' or product.vendor == 'Gazelle' or product.vendor == 'Stromer' %}
+This item is available for FREE Ground Shipping. Professional assembly is required.
+{% endif %}
+
+{% unless product.title contains 'Hotwalk' or product.title contains 'Jett' or product.title contains 'Trail 26' %}
+{% comment %} This rule adds the $69 Wheelsmith Gold Label Assembly to GLA Bikes. {% endcomment %}
+{% if product.tags contains 'Bikes' and product.vendor == 'BMC' or product.vendor == 'Orbea' or product.vendor == 'Cervelo' or product.vendor == 'Bold' or product.vendor == 'Salsa Cycles Inc.' or product.vendor == 'Santa Cruz' or product.vendor == 'Juliana' or product.vendor == 'Gazelle' or product.vendor == 'Stromer' or product.vendor == 'Rondo' or product.vendor == 'Specialized' or product.vendor == 'SCOR' or product.vendor == 'Cannondale' or product.vendor == 'Electra' or product.vendor == 'NS Bikes' and product.price > 30000 %}
+This item is available for FREE <a style="text-decoration: underline; color: #00337f;" href="https://youtu.be/lFN1HogGPKU">Wheelsmith Gold Label Assembly</a>.
+{% endif %} 
+{% endunless %}
+
+{% endunless %} 
+   
+
+{% comment %} This rule no ground shipping message {% endcomment %}
+{% if product.tags contains 'noship' %}
+<div style="margin-top: 15px; color: red;">This item is not eligible for Ground Shipping.</div>
+{% endif %}
+
+{% comment %} This rule adds the home delivery message for all bikes over $500 {% endcomment %}
+{% if product.tags contains 'Bikes' and product.price > 49994 %}
+<div style="margin-top: 15px;">FREE Store Pickup or Home Delivery for $50 in the Greater Bay Area or Sacramento.</div>
+{% endif %}
+
+{% comment %} 
+
+This rule displays shipping rules specific to Serial 1 
+{% if product.vendor == 'Serial 1' %}
+<div style="margin-top: 15px;">Serial 1 Bikes are available for FREE Ground Shipping.<br>Due to size, X-Large bikes can only be picked up in store.</div>
+{% endif %}
+
+{% endcomment %}
+
+{% comment %} This rule adds $15 shipping message {% endcomment %}
+{% if product.tags contains '15ship' %}
+<div style="margin-top: 15px; font-weight: bold; color: red;">Due to size, shipping for this item is $15.</div>
+{% endif %}
+
+{% if product.tags contains 'builtnoship' %}
+{% for variant in product.variants %}
+{% capture shippableinventory %}{{ variant.metafields.sf_location_inv.special_order | plus: variant.metafields.sf_location_inv.online | plus: variant.metafields.sf_location_inv.distribution_center_2 | plus: variant.metafields.sf_location_inv.distribution_center_1 }}{% endcapture %}
+{% if shippableinventory <= '0' %}
+<span class="shipping-message" id="shipping-message-{{variant.id}}" style="display:{% if product.selected_or_first_available_variant.id == variant.id %}block;{% else %}none;{% endif %}">Unfortunately, this item is unavailable for shipping.</span>
+{% else %}
+<span class="shipping-message" id="shipping-message-{{variant.id}}" style="display:{% if product.selected_or_first_available_variant.id == variant.id %}block;{% else %}none;{% endif %}">
+
+</span>
+
+{% endif %}
+{% endfor %}
+{% endif %}

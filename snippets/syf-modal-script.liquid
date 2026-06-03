@@ -1,0 +1,239 @@
+
+{% if template contains 'index' or template contains 'product' or template contains 'collection' %}
+    <link rel="stylesheet" data-href="{{ 'syf.css' | asset_url }}">
+    {% else %}
+    {{ 'syf.css' | asset_url | stylesheet_tag}}
+{% endif %}
+        
+            {% assign timeZone = "now" | date: "%z" %}
+            {% assign date = "now" | date: "%Y-%m-%d" %} 
+            {% assign hMAC = shop.domain | append: date | append: "mikesbikesusa.myshopify.com" %}
+         
+
+            {%- assign templateBase = template | slice: 0, 4 -%}
+            {% if templateBase == 'cart' %}
+                {% assign money_price = cart.total_price | money_with_currency %}
+                {% assign current_template = 'CART' %}
+            {% else if template == 'product' %}
+                {%- liquid
+                    assign current_template = 'PDP'
+                    assign use_variant = true
+                    if use_variant
+                        assign target = product.selected_or_first_available_variant
+                    else
+                        assign target = product
+                    endif
+                    if product.price_varies
+	                           assign priceVaries = product.price_varies | default: "", allow_false: true
+                    endif
+                    assign price = target.price | default: 1999
+                    assign money_price = price | money
+                    if settings.currency_code_enabled
+                        assign money_price = price | money_with_currency
+                    endif
+
+                    if target == product and product.price_varies
+                        assign money_price = 'products.product.price.from_price_html' | t: price: money_price
+                    endif
+                -%}    
+            {% endif %}
+
+            <script {% if template contains 'index'  or template contains 'collection' %}type="noscript-s"{% endif %}>
+                console.log("Date:","{{date}}");
+                console.log("Domain:","{{shop.domain}}");
+                console.log("timeZone:","{{timeZone}}");
+                var shop_url = "{{shop.domain}}";
+                var priceVaries = "{{priceVaries}}";
+                const shop_admin_url = "mikesbikesusa.myshopify.com";
+                const app_version = "2.0.2";
+                var UNIFI_JS = "https://pdpone.syfpos.com/mpp/UniFi.js";
+                var Theme_App_Support = "true";
+                console.log("ThemeAppSupport:" +Theme_App_Support);
+                var currentTemplate = "{{current_template}}";
+                console.log("currentTemplate:" +currentTemplate);
+                var requestOptions = {
+                    method: 'GET',
+                };
+                //it's for UniFi
+                var syfWidgetObject={};
+                var appConfig = null;
+                function loadScript(URL, ID){
+                    var scriptElement = document.createElement("script");
+                    scriptElement.type = "text/javascript";
+                    scriptElement.async = false; 
+                    scriptElement.src = URL;
+                    scriptElement.id = ID;
+                    document.head.insertAdjacentElement("afterBegin",scriptElement); 
+                }
+                
+                function updateWidget(targetSectionId, targetEleId, updateEleId,pageName) {
+                    let utargetNode = document.querySelector(targetSectionId);
+                    let utargetEle =  document.querySelector(targetEleId);
+                    if((priceVaries && priceVaries === 'true') || currentTemplate=== pageName){
+                       if(utargetNode && utargetEle){
+                        let uObserver = new MutationObserver((mutation)=>{
+                            document.querySelector(updateEleId).textContent = document.querySelector(targetEleId).textContent;
+                            });
+                            uObserver.observe(utargetNode,{
+                               childList: true,
+                               subtree: true,
+                               characterDataOldValue: true
+                            });
+                      }else{
+                        console.log("Required Elements Not Found");
+                      }
+                    }
+                }
+
+                function getTokenFromCookie(e){ let o=e+"=",t=decodeURIComponent(document.cookie).split(";");for(let e=0;e<t.length;e++){let n=t[e];for(;" "==n.charAt(0);)n=n.substring(1);if(0==n.indexOf(o))return n.substring(o.length,n.length)}return"" }
+                
+                async function syfButtonScript(){
+                    try{
+                        let result = null;
+                        // Using Session Storage to reduce the api app configuration 
+                        if(sessionStorage.getItem("app_configurations")){
+                            result = JSON.parse(sessionStorage.getItem("app_configurations"));
+                        }else{
+                            result = await( await(fetch("https://shop.mysynchrony.com/v2/api/marketing_app_configurations/shop/"+shop_url+"?&timeZone={{ timeZone }}&app_version="+app_version+"&admin_url="+shop_admin_url, requestOptions))).json();
+                            sessionStorage.setItem("app_configurations",JSON.stringify(result));
+                        }
+                        if(result.sandboxFlag === "Y"){
+                            UNIFI_JS = "https://pdpone.syfpos.com/mpp/UniFi.js";
+                        }
+                        if(result.app_configurations !=null){
+                            appConfig = result.app_configurations;
+                            if(appConfig.dbuy_widget_config != 'NONE'){
+                                syfWidgetObject.syfPartnerId = appConfig.partner_id;
+                                syfWidgetObject.flowType = currentTemplate;
+                            }
+                            var pdpPrice = "{{ money_price }}";
+                            if(pdpPrice){
+                                console.log("SyfWidgetObject",syfWidgetObject);
+                                if(!document.getElementById('syfMPPScript')){
+                                    loadScript(UNIFI_JS,'syfMPPScript');
+                                }
+                                if(Theme_App_Support==="false"){
+                                    let unifiPriceID= "product-content";
+                                    let appClass = 'product-widget';
+                                    if(currentTemplate === 'CART'){
+                                        unifiPriceID= (appConfig.priceObserverId)? appConfig.priceObserverId : unifiPriceID;
+                                        console.log("<<<Updated Price Observer Id>>>");
+                                        appClass = 'cart-widget';
+                                    }
+                                    //append checkout button dynamically into the dbuy form
+                                    var synchronyButton = `<div class="shopify-block shopify-app-block ${appClass}" id="syf-unifi-widget"><div id=${unifiPriceID} style="display:none">{{ money_price }}</div><div class="sync-price"> </div></div>`;//cart page - get the checkout button for append dbuy div elements
+                                    if(currentTemplate === 'CART' && (appConfig.dbuy_widget_config==='ALL' || appConfig.dbuy_widget_config==='CART')){
+                                        if(appConfig.dbuy_widget_in_cart)
+                                            setWidgetDiv(appConfig.dbuy_widget_in_cart,synchronyButton);
+                                    }else{
+                                        console.log("Widget not enabled in CART");
+                                    }
+                                    
+                                    //product display page - get the price div for append dbuy div elements
+                                    if(currentTemplate === 'PDP' && (appConfig.dbuy_widget_config==='ALL' || appConfig.dbuy_widget_config==='PDP')){
+                                        if(appConfig.dbuy_widget_in_pdp)
+                                            setWidgetDiv(appConfig.dbuy_widget_in_pdp,synchronyButton);
+                                    }else{
+                                        console.log("Widget not enabled in PDP");
+                                    }
+                                }
+                            }else{
+                                console.log("Price value is not available");
+                            }
+                        } else{
+                            console.log("app config data null"); 
+                        }
+                    }catch(error){
+                        console.log("Fetch App Config Error: ",error);
+                    }
+                    //for listening the apply modal close
+                    window.addEventListener("message",function(event) {
+                        if (typeof event.data == 'string' && event.data == '{"event":"widget-content-refresh"}') {
+                            console.log("Close the Modal :",event.data);
+                            let syfCookieToken = getTokenFromCookie("syfToken");
+                            console.log('syfCookieToken',syfCookieToken);
+                            if(syfCookieToken!=undefined && syfCookieToken!=''){
+                                let ifrm = document.createElement("iframe");
+                                ifrm.setAttribute("src", "https://shop.mysynchrony.com/v2/api/setToken/"+shop_url+"?applyToken="+syfCookieToken+"&&admin_url="+shop_admin_url);
+                                ifrm.style.width = "0px";
+                                ifrm.style.height = "0px";
+                                ifrm.style.display = "none";
+                                let divEle = document.getElementById('syf-unifi-widget');
+                                if(divEle!=undefined){
+                                    divEle.appendChild(ifrm);
+                                }
+                            }
+                        }
+                    });
+                }
+                function setWidgetDiv(element,synchronyButton){
+                    var buttons = document.getElementsByClassName(element);
+                    console.log(buttons,'getbyClass');
+                    var totalButton = buttons.length;
+                    console.log(totalButton);
+                    if(totalButton <= 0){
+                        buttons = document.getElementById(element);
+                        console.log(buttons,'getbyId');
+                        totalButton = buttons.length;
+                    }
+                    for (var i = 0; i < totalButton; i++) {
+                        if(buttons[i] != undefined){
+                            if( getComputedStyle(buttons[i]).display !='none' && getComputedStyle(buttons[i].parentNode).display !='none' ) {
+                                console.log(buttons[i].parentNode);
+                                var idCheck = document.getElementById("syf-unifi-widget");
+                                console.log(idCheck,"product-content >> idCheck");
+                                if(idCheck == null){
+                                    buttons[i].insertAdjacentHTML('afterEnd', synchronyButton);
+                                    break;
+                                }
+                            }                                            
+                        }
+                    }
+                }
+                //cart drawer function 
+                function cartDrawer() {
+                    console.log("cartDrawer function calling");
+                    setTimeout(function(){
+                        syfButtonScript();
+                    }, 1500);
+                }
+                                    
+                var el_cartDrawer = document.querySelectorAll('.cart-toggle, .icon-cart, .btn--add-to-cart');
+                [...el_cartDrawer].forEach(e => e.onclick = cartDrawer)
+                                
+                //cart drawer quantity
+                document.addEventListener('click',function(e){
+                    var el_cart = document.querySelectorAll('.icon-minus, .icon-plus, .fallback-text');
+                        el_cart.forEach(element => {
+                        element.setAttribute('aria-hidden', 'false');
+                    });
+                    if ( (" " + e.target.className + " ").replace(/[]/g, " ").indexOf("icon-plus") > -1 ) 
+                        cartDrawer();
+                    else if((" " + e.target.className + " ").replace(/[]/g, " ").indexOf("icon-minus") > -1){
+                        cartDrawer();
+                    }
+                    else if((" " + e.target.className + " ").replace(/[]/g, " ").indexOf("fallback-text") > -1){
+                        cartDrawer();
+                    }
+                    else if((" " + e.target.className + " ").replace(/[]/g, " ").indexOf("ajaxifyCart--add") > -1){
+                        cartDrawer();
+                    }
+                    else if((" " + e.target.className + " ").replace(/[]/g, " ").indexOf("ajaxifyCart--minus") > -1){
+                        cartDrawer();
+                    }
+                });
+
+                // Execute the snippet script
+                setTimeout(async function(){
+                    console.log("PageLoad Start");
+                    if(currentTemplate==='PDP' || currentTemplate==='CART'){
+                        await syfButtonScript();
+                    }
+                    console.log("Snippet Execution complete");
+                }, 1000);
+                // For Dynamic Price Updates - PDP
+                // updatePrice(MutationObserverId,PDPpriceElementId/SubTotalElementId,syfPriceId)
+                    //updateWidget('','','#product-content','PDP');
+                // For Dynamic Price Updates - CART
+                    //updateWidget('','','#product-content','CART');
+            </script>

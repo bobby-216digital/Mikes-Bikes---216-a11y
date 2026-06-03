@@ -1,0 +1,191 @@
+{% assign first_avail_variant = product.first_available_variant.id %}
+
+{% for variant in product.variants %}
+
+  {% comment %} check if the current variant on loop has a metafield of sf_location_inv {% endcomment %}
+  {% assign has_metafield = false %}
+
+  {% comment %}  not needed anymore {% endcomment %}
+  {% for check_variant in variant.metafields.sf_location_inv %}
+    {% if forloop.length  > 0 %}
+      {% assign has_metafield = true %}
+    {% endif %}
+  {% endfor %}
+
+   <ul class="metafields-list" style="display:none; list-style: none; text-align: left; max-width: 300px; width: 100%; margin: 0 auto 40px;">
+    <li style="text-align: center"><strong>{{ variant.title }}</strong></li>
+    {% for check_variant in variant.metafields.sf_location_inv %}
+      <li class="clearfix"><strong style="float: left;">{{ check_variant | first | replace: '_', ' ' }}</strong> <span style="float: right;"><strong>Qty:</strong> {{ check_variant | last }}</span></li>
+    {% endfor %}
+  </ul>
+
+  {% comment %} code to check if the product is a special order {% endcomment %}
+  {% assign is_special_order = false %}
+  {% assign regular_store_total = 0 %}
+  {% assign special_order_total = 0 %}
+
+  {% for field in variant.metafields.sf_location_inv %}
+
+    {% assign store_name = field | first | replace: '_', ' ' %}
+    {% assign store_inv = field | last %}
+
+    {% if store_name contains "special" or store_name == "special order" %}
+      {% assign special_order_total = special_order_total | plus: store_inv %}
+    {% else %}
+      {% assign regular_store_total = regular_store_total | plus: store_inv %}
+    {% endif %}
+
+  {% endfor %}
+
+    {% comment %} check if product contains "onlineonly" tag {% endcomment %}
+    {% assign online_sold_out = false %}
+
+        {% assign online_qty = 0 %}
+        {% assign others_qty = 0 %}
+        {% for field in variant.metafields.sf_location_inv %}
+            {% if field.first contains "online" %}
+                {% assign online_qty = online_qty | plus: field.last %}
+            {% else %}
+                {% assign others_qty = others_qty | plus: field.last %}
+            {% endif %}
+            {% comment %} <!-- {{ field.first }} - {{ field.last }} --> {% endcomment %}
+        {% endfor %}
+
+        {% comment %} mark product as soldout if MikesBikes Online Inentory are only available {% endcomment %}
+        {% comment %} {% if online_qty > 0 and others_qty < 1 %}
+            {% assign online_sold_out = true %}
+        {% endif %} {% endcomment %}
+
+
+
+  {% if regular_store_total < 1 and special_order_total > 0 and product.available %}
+    {% assign is_special_order = true %}
+  {% endif %}
+
+  {% if variant == product.selected_or_first_available_variant and variant.available == false %}
+    {% assign variantIsSoldOut = true %}
+  {% endif %}
+
+  {% if variantIsSoldOut and variant.available == false %}
+    {% comment %}
+    Do not show special order box and story availability box
+    {% endcomment %}
+  {% elsif is_special_order %}
+    <!-- p80 special order -->
+    <div id="variant-{{ variant.id }}" product-status="{% if online_sold_out %}soldout{% endif %}" class="store-inventory-container special-order-container {% if online_sold_out %}soldout{% endif %} variant-{{ variant.id }} {% if variant.id == first_avail_variant %}active{% endif %}">
+      {% if variant.metafields.global.shipdate != blank %}
+      <p class="special_message">This item is already allocated to us so you can order with confidence.<br><br>Estimated Ship Date:<br>{{variant.metafields.global.shipdate | date: "%B %e, %Y" }}</p>
+      {% elsif product.vendor == "Santa Cruz" or product.vendor == "Juliana" or product.vendor == "Reserve" or product.vendor == "Cannondale" or product.vendor == "Gazelle" or product.vendor == "Cervelo" %}
+      <p class="special_message">This is a special order item. Please allow 2-3 weeks for delivery.</p>
+      {% else %}
+      <p class="special_message">This is a special order item. Allow extra time for delivery.</p>
+        {% endif %}
+    </div>
+
+  {% else %}
+
+  {%- liquid
+    assign california_stores = ''
+    assign colorado_stores = ''
+    assign ca_int_count = 0
+    assign co_int_count = 0
+  -%}
+  {% if regular_store_total > 0 %}
+    {% for block in section.blocks %}
+      {% assign store_name = block.settings.store_name %}
+      {% assign store_metafield = block.settings.store_metafield %}
+      {% comment %} will only go here if the there are given metafield name and tehre's value on it {% endcomment %}
+      {% if block.settings.store_metafield != blank %}
+        {%- if
+          store_metafield == 'denver_east' or
+          store_metafield == 'denver_downtown' or
+          store_metafield == 'highlands_ranch' or
+          store_metafield == 'parker' or
+          store_metafield == 'boulder' or
+          store_metafield == 'distribution_center_co'
+        -%}
+          {%- liquid
+            assign int = variant.metafields.sf_location_inv[store_metafield] | times: 1
+            assign co_int_count = co_int_count | plus: int
+          -%}
+          {%- capture colorado_stores -%}
+            {{ colorado_stores }}
+            {%- render 'store-availability-item', store_name: store_name, store_metafield: store_metafield, variant: variant, section: section -%}
+          {%- endcapture -%}
+        {%- else -%}
+          {%- liquid
+            assign store_metafields = store_metafield | split: ','
+            for store_meta in store_metafields
+              assign int = variant.metafields.sf_location_inv[store_meta] | times: 1
+              assign ca_int_count = ca_int_count | plus: int
+            endfor
+          -%}
+          {%- capture california_stores -%}
+            {{ california_stores }}
+            {%- render 'store-availability-item', store_name: store_name, store_metafield: store_metafield, variant: variant, section: section -%}
+          {%- endcapture -%}
+        {%- endif -%}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+    <!-- p80 not a special order -->
+    <div product-status="{% if online_sold_out %}soldout{% endif %}" class="store-inventory-container variant-{{ variant.id }} {% if online_sold_out %}soldout{% endif %} {% if variant.id == first_avail_variant %}active{% endif %} {% if regular_store_total < 1 and special_order_total < 1 %} hidden-tool {% endif %}">
+      <div class="header-toggle">
+        <label>{{ section.settings.store_availability_box_header }}</label>
+        <span>
+          {% render 'icon-plus' %}
+          {% render 'icon-minus' %}
+        </span>
+      </div>
+      <div class="list-container">
+        {% if california_stores != blank %}
+          <div class="region">
+            <h4 class="region-header">{{ 'products.product.california_region' | t }} <span class="icon"></span></h4>
+            {% comment %} Store Location Inventory Code {% endcomment %}
+            <ul class="location-list location-list-ca" data-count="{{ ca_int_count }}">
+              {{ california_stores }}
+            </ul>
+          </div>
+        {% endif %}
+        {% if colorado_stores != blank %}
+          {% comment %} Store Location Inventory Code {% endcomment %}
+          <div class="region">
+            <h4 class="region-header">{{ 'products.product.colorado_region' | t }} <span class="icon"></span></h4>
+            {% comment %} Store Location Inventory Code {% endcomment %}
+            <ul class="location-list location-list-co" data-count="{{ co_int_count }}">
+              {{ colorado_stores }}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+      <style>
+      {%- if ca_int_count < 1 -%}
+        .store-inventory-container.variant-{{ variant.id }} .location-list-ca .list-item .lead-time-1 {
+          display: none;
+        }
+        .store-inventory-container.variant-{{ variant.id }} .location-list-ca .list-item .lead-time-2 {
+          display: inline;
+        }
+      {%- endif -%}
+      {%- if co_int_count < 1 -%}
+        .store-inventory-container.variant-{{ variant.id }} .location-list-co .list-item .lead-time-1 {
+          display: none;
+        }
+        .store-inventory-container.variant-{{ variant.id }} .location-list-co .list-item .lead-time-2 {
+          display: inline;
+        }
+      {%- endif -%}
+      </style>
+
+{% if product.type contains 'BIKES AND FRAMES' %}      
+{%- capture contentForQuerystring -%}{{ content_for_header }}{%- endcapture -%}
+{%- assign pageUrlWithoutHost= contentForQuerystring | split:'"pageurl":"' | last | split:'"' | first | split:'.myshopify.com' | last -%}
+{% if pageUrlWithoutHost contains 'testride' %}<div style="background-color: white; padding-top: 10px;"><a class="btn" style="width: 100%;" href="https://form.jotform.com/250797398484174?brand={{product.vendor}}&color-size={{ variant.title }}&model={{ product.title }}&amount={{ product.price | money_without_currency | remove: "," }}">Test Ride</a></div>{%- endif -%}
+{%- endif -%}
+  
+    </div>
+  {% endif %}
+
+
+{% endfor %}

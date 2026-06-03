@@ -1,0 +1,552 @@
+{% doc %}
+  @prompt
+    Create text columns with icons. Option to upload your own icon.
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-icon-columns-{{ ai_gen_id }} {
+    padding: {{ block.settings.section_padding }}px 0;
+    background-color: {{ block.settings.background_color }};
+  }
+
+  .ai-icon-columns__container-{{ ai_gen_id }} {
+    max-width: {{ block.settings.container_width }}px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .ai-icon-columns__heading-{{ ai_gen_id }} {
+    text-align: {{ block.settings.heading_alignment }};
+    margin: 0 0 {{ block.settings.heading_spacing }}px;
+    color: {{ block.settings.heading_color }};
+  }
+
+  .ai-icon-columns__grid-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat({{ block.settings.columns_desktop }}, 1fr);
+    gap: {{ block.settings.column_gap }}px;
+  }
+
+  .ai-icon-columns__column-{{ ai_gen_id }} {
+    text-align: {{ block.settings.text_alignment }};
+    display: flex;
+    flex-direction: column;
+    align-items: {{ block.settings.text_alignment }};
+  }
+
+  .ai-icon-columns__icon-wrapper-{{ ai_gen_id }} {
+    width: {{ block.settings.icon_size }}px;
+    height: {{ block.settings.icon_size }}px;
+    margin-bottom: {{ block.settings.icon_spacing }}px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .ai-icon-columns__icon-wrapper-{{ ai_gen_id }} img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .ai-icon-columns__icon-wrapper-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+    fill: {{ block.settings.icon_color }};
+  }
+
+  .ai-icon-columns__icon-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-icon-columns__icon-placeholder-{{ ai_gen_id }} svg {
+    width: 60%;
+    height: 60%;
+    fill: #cccccc;
+  }
+
+  .ai-icon-columns__title-{{ ai_gen_id }} {
+    margin: 0 0 {{ block.settings.title_spacing }}px;
+    color: {{ block.settings.title_color }};
+    font-size: {{ block.settings.title_size }}px;
+  }
+
+  .ai-icon-columns__text-{{ ai_gen_id }} {
+    margin: 0;
+    color: {{ block.settings.text_color }};
+    font-size: {{ block.settings.text_size }}px;
+    line-height: 1.6;
+  }
+
+  @media screen and (max-width: 989px) {
+    .ai-icon-columns__grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_tablet }}, 1fr);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-icon-columns__grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_mobile }}, 1fr);
+    }
+
+    .ai-icon-columns__icon-wrapper-{{ ai_gen_id }} {
+      width: {{ block.settings.icon_size | times: 0.8 }}px;
+      height: {{ block.settings.icon_size | times: 0.8 }}px;
+    }
+  }
+{% endstyle %}
+
+<div class="ai-icon-columns-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-icon-columns__container-{{ ai_gen_id }}">
+    {% if block.settings.heading != blank %}
+      <h2 class="ai-icon-columns__heading-{{ ai_gen_id }}">{{ block.settings.heading }}</h2>
+    {% endif %}
+
+    <div class="ai-icon-columns__grid-{{ ai_gen_id }}">
+      {% for i in (1..6) %}
+        {% liquid
+          assign column_enabled_key = 'column_' | append: i | append: '_enabled'
+          assign column_icon_key = 'column_' | append: i | append: '_icon'
+          assign column_title_key = 'column_' | append: i | append: '_title'
+          assign column_text_key = 'column_' | append: i | append: '_text'
+
+          assign column_enabled = block.settings[column_enabled_key]
+          assign column_icon = block.settings[column_icon_key]
+          assign column_title = block.settings[column_title_key]
+          assign column_text = block.settings[column_text_key]
+        %}
+
+        {% if column_enabled %}
+          <div class="ai-icon-columns__column-{{ ai_gen_id }}">
+            <div class="ai-icon-columns__icon-wrapper-{{ ai_gen_id }}">
+              {% if column_icon != blank %}
+                <img
+                  src="{{ column_icon | image_url: width: 200 }}"
+                  alt="{{ column_title | escape }}"
+                  loading="lazy"
+                  width="200"
+                  height="200"
+                >
+              {% else %}
+                <div class="ai-icon-columns__icon-placeholder-{{ ai_gen_id }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                </div>
+              {% endif %}
+            </div>
+
+            {% if column_title != blank %}
+              <h3 class="ai-icon-columns__title-{{ ai_gen_id }}">{{ column_title }}</h3>
+            {% endif %}
+
+            {% if column_text != blank %}
+              <div class="ai-icon-columns__text-{{ ai_gen_id }}">{{ column_text }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Text columns with icons",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Why choose us"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "heading_spacing",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Heading spacing",
+      "default": 40
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "section_padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Section padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "container_width",
+      "min": 600,
+      "max": 1400,
+      "step": 50,
+      "unit": "px",
+      "label": "Container width",
+      "default": 1200
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "label": "Columns on desktop",
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "columns_tablet",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "label": "Columns on tablet",
+      "default": 2
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns on mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "min": 10,
+      "max": 80,
+      "step": 5,
+      "unit": "px",
+      "label": "Column gap",
+      "default": 40
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Icon style"
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "min": 30,
+      "max": 120,
+      "step": 5,
+      "unit": "px",
+      "label": "Icon size",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "icon_spacing",
+      "min": 10,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "Icon spacing",
+      "default": 20
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#00337f"
+    },
+    {
+      "type": "header",
+      "content": "Text style"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 12,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Title size",
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "title_spacing",
+      "min": 4,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Title spacing",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Text size",
+      "default": 16
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Column 1"
+    },
+    {
+      "type": "checkbox",
+      "id": "column_1_enabled",
+      "label": "Enable column 1",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "column_1_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "text",
+      "id": "column_1_title",
+      "label": "Title",
+      "default": "Free shipping"
+    },
+    {
+      "type": "textarea",
+      "id": "column_1_text",
+      "label": "Text",
+      "default": "On all orders over $50"
+    },
+    {
+      "type": "header",
+      "content": "Column 2"
+    },
+    {
+      "type": "checkbox",
+      "id": "column_2_enabled",
+      "label": "Enable column 2",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "column_2_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "text",
+      "id": "column_2_title",
+      "label": "Title",
+      "default": "Easy returns"
+    },
+    {
+      "type": "textarea",
+      "id": "column_2_text",
+      "label": "Text",
+      "default": "30-day return policy"
+    },
+    {
+      "type": "header",
+      "content": "Column 3"
+    },
+    {
+      "type": "checkbox",
+      "id": "column_3_enabled",
+      "label": "Enable column 3",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "column_3_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "text",
+      "id": "column_3_title",
+      "label": "Title",
+      "default": "Secure checkout"
+    },
+    {
+      "type": "textarea",
+      "id": "column_3_text",
+      "label": "Text",
+      "default": "Safe and encrypted payment"
+    },
+    {
+      "type": "header",
+      "content": "Column 4"
+    },
+    {
+      "type": "checkbox",
+      "id": "column_4_enabled",
+      "label": "Enable column 4",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "column_4_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "text",
+      "id": "column_4_title",
+      "label": "Title",
+      "default": "Expert support"
+    },
+    {
+      "type": "textarea",
+      "id": "column_4_text",
+      "label": "Text",
+      "default": "Available 7 days a week"
+    },
+    {
+      "type": "header",
+      "content": "Column 5"
+    },
+    {
+      "type": "checkbox",
+      "id": "column_5_enabled",
+      "label": "Enable column 5",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "column_5_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "text",
+      "id": "column_5_title",
+      "label": "Title",
+      "default": "Quality guarantee"
+    },
+    {
+      "type": "textarea",
+      "id": "column_5_text",
+      "label": "Text",
+      "default": "Premium products only"
+    },
+    {
+      "type": "header",
+      "content": "Column 6"
+    },
+    {
+      "type": "checkbox",
+      "id": "column_6_enabled",
+      "label": "Enable column 6",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "column_6_icon",
+      "label": "Icon"
+    },
+    {
+      "type": "text",
+      "id": "column_6_title",
+      "label": "Title",
+      "default": "Fast delivery"
+    },
+    {
+      "type": "textarea",
+      "id": "column_6_text",
+      "label": "Text",
+      "default": "Ships within 24 hours"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Text columns with icons"
+    }
+  ]
+}
+{% endschema %}

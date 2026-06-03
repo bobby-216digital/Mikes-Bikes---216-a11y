@@ -1,0 +1,24 @@
+{% capture description %}
+  {%- if product.empty? -%}
+    {{ 'home_page.onboarding.product_description' | t }}
+  {%- else -%}
+    {{ product.description }}
+  {%- endif -%}
+{% endcapture %}
+{%- if is_tab -%}
+  {% assign title = 'products.product.description' | t %}
+  {%- render 'tab', id: id, title: title, content: description -%}
+{%- else -%}
+  <div class="rte">
+    {{ description }}
+  </div>
+{%- endif -%}
+
+{% if product.type contains 'BIKES AND FRAMES/BIKES' %}
+<div style="margin-top: 15px;"><i>*Product specifications are subject to change without notice.</i></div>
+{% endif %}
+
+{% comment %} This rule adds the Advance Recycing Fee messaging on PDP {% endcomment %}
+{% if product.tags contains 'arf' or product.tags contains 'arf1000' %}
+<div style="margin-top: 15px;"><i>*Certain battery-embedded products are subject to a one-time, non-refundable Advanced Recycling Fee (ARF) at purchase, as required by California SB 1215 and administered by Call2Recycle. For 2026, the ARF is set at 1.5% of the item price, capped at $15 per item.</i></div>
+{% endif %}

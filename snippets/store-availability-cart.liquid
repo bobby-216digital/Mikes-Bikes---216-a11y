@@ -1,0 +1,157 @@
+{% comment %} check if the current variant on loop has a metafield of sf_location_inv {% endcomment %}
+{% assign has_metafield = false %}
+
+{% for check_variant in variant.metafields.sf_location_inv %}
+  {% if forloop.length > 0 %}
+    {% assign has_metafield = true %}
+  {% endif %}
+{% endfor %}
+
+
+{% comment %} code to check if the product is a special order {% endcomment %}
+{% assign is_special_order = false %}
+{% assign regular_store_total = 0 %}
+{% assign special_order_total = 0 %}
+
+{% for field in variant.metafields.sf_location_inv %}
+
+  {% assign store_name = field | first | replace: '_', ' ' %}
+  {% assign store_inv = field | last %}
+
+  {% if store_name contains "special" or store_name == "special order" %}
+    {% assign special_order_total = special_order_total | plus: store_inv %}
+  {% else %}
+    {% assign regular_store_total = regular_store_total | plus: store_inv %}
+  {% endif %}
+
+{% endfor %}
+
+{% if regular_store_total < 1 and special_order_total > 0 %}
+  {% assign is_special_order = true %}
+{% endif %}
+
+{% if is_special_order %}
+
+  <div id="variant-{{ variant.id }}" class="store-inventory-container special-order-container variant-{{ variant.id }} active">
+    <p class="special_message">This is a special order item, please allow extra time for delivery.
+      {% if variant.metafields.global.shipdate != blank %} 
+      Estimated Ship Date: {{variant.metafields.global.shipdate | date: "%B %d, %Y" }}
+      {% endif %}
+		</p>
+  </div>
+
+{% else %}
+
+  {%- liquid
+    assign california_stores = ''
+    assign colorado_stores = ''
+    assign ca_int_count = 0
+    assign co_int_count = 0
+  -%}
+  {% if regular_store_total > 0 %}
+    {% for block in section.blocks %}
+      {% assign store_name = block.settings.store_name %}
+      {% assign store_metafield = block.settings.store_metafield %}
+      {% assign store_metafield2 = block.settings.store_metafield2 %}
+      {% assign tag = block.settings.store_tag_condition %}
+      {% comment %} will only go here if the there are given metafield name and tehre's value on it {% endcomment %}
+      {% if block.settings.store_metafield != blank %}
+
+        {% if item.product.tags contains tag and store_metafield2 != blank %}
+          {% comment %} alternate metafields item {% endcomment %}
+          {% assign store_metafield = store_metafield2 %}
+        {% endif %}
+
+        {%- if
+          store_metafield == 'denver_east' or
+          store_metafield == 'denver_downtown' or
+          store_metafield == 'highlands_ranch' or
+          store_metafield == 'parker' or
+          store_metafield == 'boulder' or
+          store_metafield == 'distribution_center_co'
+        -%}
+          {%- liquid
+            assign int = variant.metafields.sf_location_inv[store_metafield] | times: 1
+            assign co_int_count = co_int_count | plus: int
+          -%}
+          {%- capture colorado_stores -%}
+            {{ colorado_stores }}
+            {%- render 'store-availability-item', store_name: store_name, store_metafield: store_metafield, variant: variant, section: section -%}
+          {%- endcapture -%}
+        {%- else -%}
+          {%- liquid
+            assign store_metafields = store_metafield | split: ','
+            for store_meta in store_metafields
+              assign int = variant.metafields.sf_location_inv[store_meta] | times: 1
+              assign ca_int_count = ca_int_count | plus: int
+            endfor
+          -%}
+          {%- capture california_stores -%}
+            {{ california_stores }}
+            {%- render 'store-availability-item', store_name: store_name, store_metafield: store_metafield, variant: variant, section: section -%}
+          {%- endcapture -%}
+        {%- endif -%}
+
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <div class="store-inventory-container variant-{{ variant.id }} active">
+    <div class="header-toggle">
+      <label>{{ section.settings.store_availability_box_header }}</label>
+      <span>
+        {% render 'icon-plus' %}
+        {% render 'icon-minus' %}
+      </span>
+    </div>
+    <div class="list-container">
+      {% if has_metafield %}
+        {% if california_stores != blank %}
+          <div class="region">
+            <h4 class="region-header">{{ 'products.product.california_region' | t }} <span class="icon"></span></h4>
+            {% comment %} Store Location Inventory Code {% endcomment %}
+            <ul class="location-list location-list-ca" data-count="{{ ca_int_count }}">
+              {{ california_stores }}
+            </ul>
+          </div>
+        {% endif %}
+        {% if colorado_stores != blank %}
+          {% comment %} Store Location Inventory Code {% endcomment %}
+          <div class="region">
+            <h4 class="region-header">{{ 'products.product.colorado_region' | t }} <span class="icon"></span></h4>
+            {% comment %} Store Location Inventory Code {% endcomment %}
+            <ul class="location-list location-list-co" data-count="{{ co_int_count }}">
+              {{ colorado_stores }}
+            </ul>
+          </div>
+        {% endif %}
+      {% else %}
+        {% comment %} Store Location Inventory Code {% endcomment %}
+        <ul class="location-list two-column-style">
+          <li class="list-item no-inventory text-center">
+            <label>No available store</label>
+          </li>
+        </ul>
+      {% endif %}
+    </div>
+    <style>
+      {%- if ca_int_count < 1 -%}
+        .store-inventory-container.variant-{{ variant.id }} .location-list-ca .list-item .lead-time-1 {
+          display: none;
+        }
+        .store-inventory-container.variant-{{ variant.id }} .location-list-ca .list-item .lead-time-2 {
+          display: inline;
+        }
+      {%- endif -%}
+      {%- if co_int_count < 1 -%}
+        .store-inventory-container.variant-{{ variant.id }} .location-list-co .list-item .lead-time-1 {
+          display: none;
+        }
+        .store-inventory-container.variant-{{ variant.id }} .location-list-co .list-item .lead-time-2 {
+          display: inline;
+        }
+      {%- endif -%}
+    </style>
+  </div>
+
+{% endif %}

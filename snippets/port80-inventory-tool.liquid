@@ -1,0 +1,161 @@
+{% if template contains 'product' or request.path contains 'cart' %}
+<script  >
+
+  var loadScript = function(url, callback){
+
+    /* JavaScript that will load the jQuery library on Google's CDN.
+       We recommend this code: http://snipplr.com/view/18756/loadscript/.
+       Once the jQuery library is loaded, the function passed as argument,
+       callback, will be executed. */
+
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+
+    if (script.readyState){  //IE
+        script.onreadystatechange = function(){
+            if (script.readyState == "loaded" ||
+                    script.readyState == "complete"){
+                script.onreadystatechange = null;
+                callback();
+            }
+        };
+    } else {  //Others
+        script.onload = function(){
+            callback();
+        };
+    }
+
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
+
+  };
+
+  var myAppJavaScript = function($){
+    /* Your app's JavaScript here.
+       $ in this scope references the jQuery object we'll use.
+       Don't use 'jQuery', or 'jQuery191', here. Use the dollar sign
+       that was passed as argument.*/
+
+    console.log('Your app is using jQuery version ' + $.fn.jquery );
+
+
+    // script code
+    $(document).ready(function(){
+
+
+
+      // $( ".store-inventory-container .list-container" ).each(function( index ) {
+      //   $(this).find("li.dist-center").insertAfter( $(this).find("li:last") );
+      // });
+
+
+      // code to get the variant from the url that change
+      var getUrlParameter = function getUrlParameter(sParam) {
+        var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+        for (i = 0; i < sURLVariables.length; i++) {
+          sParameterName = sURLVariables[i].split('=');
+
+          if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : sParameterName[1];
+          }
+        }
+      };
+
+      // store it on this variable
+      var variantID = getUrlParameter('variant');
+
+      if(variantID != undefined){
+
+        $(".store-inventory-container").removeClass("active");
+        $(".store-inventory-container.variant-" + variantID ).addClass("active");
+
+        if ( $( ".store-inventory-container.variant-" + variantID ).hasClass("special-order-container") ) {
+          var button_label = $("button.add-to-cart").attr("data-special-order");
+
+          $("button.add-to-cart").addClass("special-order-button");
+          $("button.add-to-cart span").hide();
+          $("button.add-to-cart span.special-order-button").text(button_label).show();
+          $(".sales-point").hide();
+        } else {
+          $("button.add-to-cart").removeClass("special-order-button");
+          $("button.add-to-cart span.special-order-button").text("").hide();
+          $("button.add-to-cart span").show();
+          $(".sales-point").show();
+        }
+
+      }else if( $( ".store-inventory-container.active" ).hasClass("special-order-container") ) {
+
+        var button_label = $("button.add-to-cart").attr("data-special-order");
+
+        $("button.add-to-cart").addClass("special-order-button");
+        $("button.add-to-cart span").hide();
+        $("button.add-to-cart span.special-order-button").text(button_label).show();
+
+      }
+
+
+
+      //  this is code is moved on the theme.js.liquid file
+
+      // $(".product-single__form select.product-single__variants").change(function() {
+
+      //   variantID = getUrlParameter('variant');
+
+      //   // alert( variantID );
+      //   $(".store-inventory-container").hide();
+      //   $(".store-inventory-container.variant-" + variantID).show();
+
+      //   if ( $( ".store-inventory-container.variant-" + variantID ).hasClass("special-order-container") ) {
+      //     var button_label = $("button.add-to-cart").attr("data-special-order");
+
+      //     $("button.add-to-cart").addClass("special-order-button");
+      //     $("button.add-to-cart span").hide();
+      //     $("button.add-to-cart span.special-order-button").text(button_label).show();
+      //   } else {
+      //     $("button.add-to-cart").removeClass("special-order-button");
+      //     $("button.add-to-cart span.special-order-button").text("").hide();
+      //     $("button.add-to-cart span").show();
+      //   }
+
+      // });
+
+      $(".template-product .store-inventory-container .header-toggle").click(function(){
+        // $(this).toggleClass("active");
+        // $(this).next(".list-container").slideToggle("fast");
+        $(".store-inventory-container .header-toggle").toggleClass("active");
+        $(".store-inventory-container .list-container").slideToggle("fast");
+      });
+
+      $(".template-product .store-inventory-container .region-header").click(function(){
+        $(this).toggleClass('collapsed');
+      });
+
+      $(".template-cart .store-inventory-container .header-toggle").click(function(){
+        $(this).toggleClass("active");
+        // $(".store-inventory-container .list-container").slideToggle("fast");
+        $(this).next(".list-container").slideToggle("fast");
+      });
+
+      $(".template-cart .store-inventory-container .region-header").click(function(){
+        $(this).toggleClass('collapsed');
+      });
+
+    });
+
+  };
+
+  if ((typeof jQuery === 'undefined') || (parseFloat(jQuery.fn.jquery) < 1.7)) {
+    loadScript('//mikesbikes.com/cdn/shop/t/73/assets/jquery.min.js?v=77015668167349694581687365896', function(){
+      jQuery191 = jQuery.noConflict(true);
+      myAppJavaScript(jQuery191);
+    });
+  } else {
+    myAppJavaScript(jQuery);
+  }
+
+</script>
+{% endif %}
