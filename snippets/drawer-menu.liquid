@@ -32,7 +32,7 @@
               <div class="mobile-nav__has-sublist">
                 {%- if link.url == '#' -%}
                   <button type="button"
-                    aria-controls="Linklist-{{ child_list_handle }}"{% if link.active or link.child_active %} aria-open="true"{% endif %}
+                    aria-controls="Linklist-{{ child_list_handle }}"
                     class="mobile-nav__link--button mobile-nav__link--top-level collapsible-trigger collapsible--auto-height{% if link.active or link.child_active %} is-open{% endif %}">
                     <span class="mobile-nav__faux-link"{% if link.active %} data-active="true"{% endif %}>
                       {{ link.title }}
@@ -52,7 +52,7 @@
                   </a>
                   <div class="mobile-nav__toggle">
                     <button type="button"
-                      aria-controls="Linklist-{{ child_list_handle }}"{% if link.active or link.child_active %} aria-open="true"{% endif %}
+                      aria-controls="Linklist-{{ child_list_handle }}"
                       aria-labelledby="Label-{{ child_list_handle }}"
                       class="collapsible-trigger collapsible--auto-height{% if link.active or link.child_active %} is-open{% endif %}">
                       {%- render 'collapsible-icons' -%}
@@ -81,7 +81,7 @@
                         <div class="mobile-nav__child-item">
                           {%- if childlink.url == '#' and has_sub_dropdown -%}
                             <button type="button"
-                            aria-controls="Sublinklist-{{ child_list_handle }}-{{ grand_child_list_handle }}"{% if childlink.active or childlink.child_active %} aria-open="true"{% endif %}
+                            aria-controls="Sublinklist-{{ child_list_handle }}-{{ grand_child_list_handle }}"
                             class="mobile-nav__link--button collapsible-trigger{% if childlink.active or childlink.child_active %} is-open{% endif %}">
                               <span class="mobile-nav__faux-link"{% if childlink.active %} data-active="true"{% endif %}>{{ childlink.title | escape }}</span>
                               {%- render 'collapsible-icons-alt' -%}
